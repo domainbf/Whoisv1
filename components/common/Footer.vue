@@ -11,7 +11,6 @@ const { t } = useI18n()
       <div class="flex items-center space-x-4">
         <NuxtLink :to="localePath('/api.html')" class="hover:underline">{{ t('footer.api') }}</NuxtLink>
         <NuxtLink to="https://whois.ls" class="hover:underline">
-          <Icon name="" class="h-6 w-6" />
         </NuxtLink>
       </div>
     </div>
