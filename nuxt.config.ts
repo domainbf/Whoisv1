@@ -6,18 +6,20 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@nuxtjs/i18n',
     'nuxt-headlessui',
-    '@pinia/nuxt', // needed
+    '@pinia/nuxt',
     '@pinia-plugin-persistedstate/nuxt',
     'nuxt-simple-robots',
   ],
   features: {
-    inlineStyles: true,
+    inlineStyles: true, // 谨慎使用，建议根据实际情况决定是否开启
   },
   runtimeConfig: {
     public: {
-      Domain: 'Domain+DNS Lookup',
-      DomainSuffix: 'whois.ls',
-    }
+      siteName: 'Whois.ls',
+      siteDescription: 'Domain and DNS Lookup',
+      siteUrl: 'https://whois.ls', // 确保包含完整的URL
+      ogImage: '/images/whoisls.png', // 图片放在 public/images 目录下
+    },
   },
   app: {
     head: {
@@ -25,20 +27,26 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { hid: 'description', name: 'description', content: 'whois.ls' },
-        { hid: 'og:title', property: 'og:title', content: 'Whois.ls' },
-        { hid: 'og:description', property: 'og:description', content: 'whois.ls - Domain and DNS Lookup' },
-        { hid: 'og:image', property: 'og:image', content: '/whoisls.png' },
-        { hid: 'og:url', property: 'og:url', content: 'https://whois.ls' },
+        { hid: 'description', name: 'description', content: () => useRuntimeConfig().public.siteDescription },
+        { hid: 'og:title', property: 'og:title', content: () => useRuntimeConfig().public.siteName },
+        { hid: 'og:description', property: 'og:description', content: () => useRuntimeConfig().public.siteDescription },
+        {
+          hid: 'og:image',
+          property: 'og:image',
+          content: () => useRuntimeConfig().public.siteUrl + useRuntimeConfig().public.ogImage,
+        },
+        { hid: 'og:url', property: 'og:url', content: () => useRuntimeConfig().public.siteUrl },
         { hid: 'twitter:card', name: 'twitter:card', content: 'summary_large_image' },
-        { hid: 'twitter:title', name: 'twitter:title', content: 'Whois.ls' },
-        { hid: 'twitter:description', name: 'twitter:description', content: 'whois.ls - Domain and DNS Lookup' },
-        { hid: 'twitter:image', name: 'twitter:image', content: '/whois.ls.png' }
+        { hid: 'twitter:title', name: 'twitter:title', content: () => useRuntimeConfig().public.siteName },
+        { hid: 'twitter:description', name: 'twitter:description', content: () => useRuntimeConfig().public.siteDescription },
+        {
+          hid: 'twitter:image',
+          name: 'twitter:image',
+          content: () => useRuntimeConfig().public.siteUrl + useRuntimeConfig().public.ogImage,
+        },
       ],
-      link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
-      ]
-    }
+      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
+    },
   },
   i18n: {
     strategy: 'prefix_except_default',
@@ -54,6 +62,6 @@ export default defineNuxtConfig({
     langDir: 'lang/',
   },
   headlessui: {
-    prefix: 'Headless'
+    prefix: 'Headless',
   },
 });
