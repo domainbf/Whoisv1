@@ -1,4 +1,4 @@
-import { SocksClient,SocksClientOptions } from 'socks';
+import { SocksClient, SocksClientOptions } from 'socks';
 import Net from 'net';
 
 import serversData from '~/server/whois/json/whois-servers.json';
@@ -23,7 +23,7 @@ const PARAMETERS: IServers = parametersData as IServers;
 async function findWhoIsServer(tld: string): Promise<string> {
     const chkURL = IANA_CHK_URL + tld
 
-    try{
+    try {
         const res = await fetch(chkURL);
         if (res.ok) {
             const body = await res.text();
@@ -37,8 +37,8 @@ async function findWhoIsServer(tld: string): Promise<string> {
     }
 
     return '';
-
 }
+
 /**
  * Copy an Object with its values
  *
@@ -67,7 +67,7 @@ function shallowCopy<T extends any>(obj: T): T {
  * @param tld TLD of the domain
  * @returns WhoIs server which hosts the information for the domains of the TLD
  */
-function getWhoIsServer(tld: string): string|undefined {
+function getWhoIsServer(tld: string): string | undefined {
     return SERVERS[tld];
 }
 
@@ -103,11 +103,11 @@ function getTLD(domain: string): string {
     console.debug('TLD is not found in server list. Returning last element after split as TLD!');
 
     const domainData = domain.split('.');
-    return domainData[domainData.length-1];
+    return domainData[domainData.length - 1];
 }
 
 // get whois query parameters if exist on parameters.json for whois server
-function getParameters(server: string): string|undefined {
+function getParameters(server: string): string | undefined {
     return PARAMETERS[server];
 }
 
@@ -269,21 +269,54 @@ export class WhoIsParser {
         if (!outputData) {
             outputData = {
                 'Domain Name': '',
-                'Creation Date': '',
+                'Domain ID': '',
+                'Registrar WHOIS Server': '',
+                'Registrar URL': '',
                 'Updated Date': '',
+                'Creation Date': '',
                 'Registry Expiry Date': '',
+                'Registrar': '',
+                'Registrar IANA ID': '',
+                'Registrar Abuse Contact Email': '',
+                'Registrar Abuse Contact Phone': '',
                 'Domain Status': [],
-                "Registrar": '',
-            }
+                'Registrant Name': '',
+                'Registrant Organization': '',
+                'Registrant Street': '',
+                'Registrant City': '',
+                'Registrant State/Province': '',
+                'Registrant Postal Code': '',
+                'Registrant Country': '',
+                'Registrant Phone': '',
+                'Registrant Email': '',
+                'Admin Name': '',
+                'Admin Organization': '',
+                'Admin Street': '',
+                'Admin City': '',
+                'Admin State/Province': '',
+                'Admin Postal Code': '',
+                'Admin Country': '',
+                'Admin Phone': '',
+                'Admin Email': '',
+                'Tech Name': '',
+                'Tech Organization': '',
+                'Tech Street': '',
+                'Tech City': '',
+                'Tech State/Province': '',
+                'Tech Postal Code': '',
+                'Tech Country': '',
+                'Tech Phone': '',
+                'Tech Email': '',
+                'Name Server': [],
+                'DNSSEC': ''
+            };
         }
 
         outputData = WhoIsParser.iterParse(rawData, outputData);
 
         return outputData;
     }
-
 }
-
 
 /**
  * Connects to the provided {@link server}:{@link port} through TCP (through a proxy if a proxy is given), run the WhoIs query and returns the response
@@ -304,7 +337,7 @@ export async function tcpWhois(domain: string, queryOptions: string, server: str
         const socket = new Net.Socket();
         return new Promise((resolve, reject) => {
             try {
-                socket.connect({port: port, host: server}, function() {
+                socket.connect({ port: port, host: server }, function () {
                     if (queryOptions != '') {
                         socket.write(encoder.encode(`${queryOptions} ${domain}\r\n`));
                     } else {
@@ -320,7 +353,7 @@ export async function tcpWhois(domain: string, queryOptions: string, server: str
                 socket.on('error', (error) => {
                     reject(error);
                 });
-            } catch (e){
+            } catch (e) {
                 reject(e);
             }
         });
@@ -346,7 +379,7 @@ export async function tcpWhois(domain: string, queryOptions: string, server: str
         }
 
         return new Promise((resolve, reject) => {
-            SocksClient.createConnection(options, function(err, info) {
+            SocksClient.createConnection(options, function (err, info) {
                 if (err) {
                     reject(err);
                 } else {
@@ -376,7 +409,7 @@ export async function tcpWhois(domain: string, queryOptions: string, server: str
 }
 
 /**
- * Collect WhoIs data for the mentioned {@link domain}. Parse the reveived response if {@link parse} is true, accordingly.
+ * Collect WhoIs data for the mentioned {@link domain}. Parse the received response if {@link parse} is true, accordingly.
  *
  * @param domain Domain name
  * @param parse Whether the raw text needs to be parsed/formatted or not
@@ -477,8 +510,8 @@ export async function batchWhois(domains: string[], parallel: boolean = false, t
             threads = domains.length;
         }
 
-        for (let i = 0; i < domains.length; i+= threads) {
-            const batch = domains.slice(i, i+threads);
+        for (let i = 0; i < domains.length; i += threads) {
+            const batch = domains.slice(i, i + threads);
             let resp = await Promise.all(batch.map(async domain => {
                 return await whois(domain, parse, options);
             }));
