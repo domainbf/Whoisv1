@@ -13,47 +13,64 @@ interface WhoisInformation {
     dnssec?: string;
     icannWhoisInaccuracyComplaintFormURL?: string;
 }
+
 export function ParseWhois(whoisText: string): WhoisInformation {
     const lines = whoisText.split('\n'); // 将文本分割成行
     const info: WhoisInformation = {}; // 创建一个空对象来存储提取的信息
 
     lines.forEach(line => {
-        const [key, value] = line.split(': ').map(part => part.trim());
-        switch (key) {
-            case 'Domain Name':
+        const [key, value] = line.split(/:\s+/).map(part => part.trim()); // 使用正则表达式以处理更多的分隔符变体
+        if (!key || !value) return; // 跳过空行或无效行
+
+        switch (key.toLowerCase()) { // 使用小写进行匹配
+            case 'domain name':
+            case 'domain':
+            case 'domainname':
                 info.domainName = value;
                 break;
-            case 'Registry Domain ID':
+            case 'registry domain id':
+            case 'domain id':
                 info.registryDomainID = value;
                 break;
-            case 'Registrar WHOIS Server':
+            case 'registrar whois server':
+            case 'whois server':
                 info.registrarWHOISServer = value;
                 break;
-            case 'Registrar URL':
+            case 'registrar url':
+            case 'url':
                 info.registrarURL = value;
                 break;
-            case 'Updated Date':
+            case 'updated date':
+            case 'last updated':
+            case 'last modified':
                 info.updatedDate = value;
                 break;
-            case 'Creation Date':
+            case 'creation date':
+            case 'created date':
+            case 'created':
                 info.creationDate = value;
                 break;
-            case 'Registry Expiry Date':
+            case 'registry expiry date':
+            case 'expiry date':
+            case 'expires on':
                 info.registryExpiryDate = value;
                 break;
-            case 'Registrar':
+            case 'registrar':
                 info.registrar = value;
                 break;
-            case 'Registrar IANA ID':
+            case 'registrar iana id':
                 info.registrarIANAID = value;
                 break;
-            case 'Domain Status':
+            case 'domain status':
+            case 'status':
                 info.domainStatus = info.domainStatus ? [...info.domainStatus, value] : [value];
                 break;
-            case 'Name Server':
+            case 'name server':
+            case 'nameserver':
+            case 'nserver':
                 info.nameServers = info.nameServers ? [...info.nameServers, value] : [value];
                 break;
-            case 'DNSSEC':
+            case 'dnssec':
                 info.dnssec = value;
                 break;
         }
