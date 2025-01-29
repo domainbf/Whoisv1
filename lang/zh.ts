@@ -1,7 +1,7 @@
 export default defineI18nLocale(async locale => {
     return {
         app: {
-            title: 'Nuxt Whois',
+            title: 'whois.ls',
         },
         common: {
           actions: {
@@ -90,7 +90,7 @@ export default defineI18nLocale(async locale => {
             rawData: '原始数据',
         },
         footer: {
-            text: '© 2024 Whois查询. All rights reserved.',
+            text: '© 2025 Whois.ls. All rights reserved.',
             //API文档
             api: 'API文档'
         },
