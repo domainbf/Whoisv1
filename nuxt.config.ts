@@ -15,13 +15,13 @@ export default defineNuxtConfig({
   } ,
   runtimeConfig: {
       public: {
-          Domain: 'Nuxt Whois',
-          DomainSuffix: 'Dns',
+          Domain: 'Whois.ls',
+          DomainSuffix: '+Dns',
       }
   },
   app:{
     head: {
-        title: 'Nuxt Whois',
+        title: 'Whois.ls',
         meta: [
             { charset: 'utf-8' },
             { name: 'viewport', content: 'width=device-width, initial-scale=1' },
