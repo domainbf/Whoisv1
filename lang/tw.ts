@@ -87,7 +87,7 @@ export default defineI18nLocale(async locale => {
             rawData: '原始資料',
         },
         footer: {
-            text: '© 2024 Whois查詢. All rights reserved.',
+            text: '© 2025 Whois.ls. All rights reserved.',
             api: 'API文檔'
         },
         api: {
