@@ -85,7 +85,7 @@ export default defineI18nLocale(async locale => {
             rawData: 'Raw Data',
         },
         footer: {
-            text: '© 2024 Whois Query. All rights reserved.',
+            text: '© 2025 Whois.ls. All rights reserved.',
             api: 'API Documentation'
         },
         api: {
