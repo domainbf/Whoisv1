@@ -11,14 +11,17 @@ export default defineNuxtConfig({
     'nuxt-simple-robots',
   ],
   features: {
-    inlineStyles: true, // 谨慎使用，建议根据实际情况决定是否开启
+    inlineStyles: true,
   },
   runtimeConfig: {
     public: {
-      siteName: 'Whois.ls',
-      siteDescription: 'Domain and DNS Lookup',
-      siteUrl: 'https://whois.ls', // 确保包含完整的URL
-      ogImage: '/images/whoisls.png', // 图片放在 public/images 目录下
+      Domain: 'Domain+DNS Lookup',
+      DomainSuffix: 'whois.ls',
+      siteName: 'Whois.ls', // 站点名称
+      siteDescription: 'whois.ls - Domain and DNS Lookup', // 站点描述
+      siteUrl: 'https://whois.ls', // 站点 URL，必须包含域名
+      siteLogo: '/images/logo.png', // 站点 Logo 图片路径，建议放在 public/images 目录下
+      ogImage: '/images/share-image.png', // 分享图片路径，建议放在 public/images 目录下
     },
   },
   app: {
@@ -27,25 +30,70 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { hid: 'description', name: 'description', content: () => useRuntimeConfig().public.siteDescription },
-        { hid: 'og:title', property: 'og:title', content: () => useRuntimeConfig().public.siteName },
-        { hid: 'og:description', property: 'og:description', content: () => useRuntimeConfig().public.siteDescription },
+        {
+          hid: 'description',
+          name: 'description',
+          content: () => useRuntimeConfig().public.siteDescription,
+        },
+        {
+          hid: 'og:title',
+          property: 'og:title',
+          content: () => useRuntimeConfig().public.siteName,
+        },
+        {
+          hid: 'og:description',
+          property: 'og:description',
+          content: () => useRuntimeConfig().public.siteDescription,
+        },
         {
           hid: 'og:image',
           property: 'og:image',
-          content: () => useRuntimeConfig().public.siteUrl + useRuntimeConfig().public.ogImage,
+          content: () => useRuntimeConfig().public.siteUrl + useRuntimeConfig().public.ogImage, // 完整的 og:image URL
         },
-        { hid: 'og:url', property: 'og:url', content: () => useRuntimeConfig().public.siteUrl },
-        { hid: 'twitter:card', name: 'twitter:card', content: 'summary_large_image' },
-        { hid: 'twitter:title', name: 'twitter:title', content: () => useRuntimeConfig().public.siteName },
-        { hid: 'twitter:description', name: 'twitter:description', content: () => useRuntimeConfig().public.siteDescription },
+        {
+          hid: 'og:url',
+          property: 'og:url',
+          content: () => useRuntimeConfig().public.siteUrl,
+        },
+        {
+          hid: 'og:site_name',
+          property: 'og:site_name',
+          content: () => useRuntimeConfig().public.siteName, // 添加 og:site_name
+        },
+        {
+          hid: 'og:type',
+          property: 'og:type',
+          content: 'website', // 添加 og:type
+        },
+        {
+          hid: 'twitter:card',
+          name: 'twitter:card',
+          content: 'summary_large_image',
+        },
+        {
+          hid: 'twitter:title',
+          name: 'twitter:title',
+          content: () => useRuntimeConfig().public.siteName,
+        },
+        {
+          hid: 'twitter:description',
+          name: 'twitter:description',
+          content: () => useRuntimeConfig().public.siteDescription,
+        },
         {
           hid: 'twitter:image',
           name: 'twitter:image',
-          content: () => useRuntimeConfig().public.siteUrl + useRuntimeConfig().public.ogImage,
+          content: () => useRuntimeConfig().public.siteUrl + useRuntimeConfig().public.ogImage, // 完整的 twitter:image URL
         },
       ],
-      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        {
+          rel: 'apple-touch-icon',
+          sizes: '180x180',
+          href: () => useRuntimeConfig().public.siteUrl + useRuntimeConfig().public.siteLogo, // 添加 apple-touch-icon
+        },
+      ],
     },
   },
   i18n: {
