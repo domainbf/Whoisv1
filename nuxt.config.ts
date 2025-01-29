@@ -15,7 +15,7 @@ export default defineNuxtConfig({
   } ,
   runtimeConfig: {
       public: {
-          Domain: '域名信息查询',
+          Domain: 'Domain+DNS Lookup',
           DomainSuffix: 'whois.ls',
       }
   },
