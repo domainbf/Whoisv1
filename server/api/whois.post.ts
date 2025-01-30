@@ -1,5 +1,5 @@
 import { whois } from "~/server/whois/whois";
-import axios from "axios"; // Import axios for making API requests
+import axios from "axios";
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event);
@@ -60,6 +60,7 @@ export default defineEventHandler(async (event) => {
 
         return domainInfo;
     } catch (e) {
+        console.error("Error fetching WHOIS information or domain prices:", e);
         return {
             error: e.message,
             lastUpdate: `>>> Last update of whois database: ${new Date()} <<<`,
