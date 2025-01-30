@@ -125,10 +125,9 @@ const showToast = (message: string) => {
           </UButton>
         </UForm>
       </div>
-      <CommonBulletin
-        v-if="!styleStore.isPage && clientMounted"
-        :text="`公告:  ${t('index.tips') }`"
-      />
+      <CommonBulletin 
+  v-if="!styleStore.isPage && clientMounted"
+/>
 
       <TabList @action="handleAction" />
       <slot />
