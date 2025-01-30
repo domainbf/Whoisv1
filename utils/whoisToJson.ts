@@ -70,8 +70,28 @@ export function ParseWhois(whoisText: string): WhoisInformation {
     const lines = whoisText.split('\n');
     const info: WhoisInformation = {};
 
-    if (whoisText.includes('No Object Found') || whoisText.includes('The queried object does not exist')) {
+    // Check for specific phrases indicating the domain is not registered
+    const notRegisteredPhrases = [
+        'No Object Found',
+        'The queried object does not exist',
+        'No match for domain',
+        'Domain not found',
+        'Not Registered'
+    ];
+
+    // Check for specific phrases indicating the domain is reserved
+    const reservedPhrases = [
+        'Reserved Name',
+        'This domain is reserved'
+    ];
+
+    if (notRegisteredPhrases.some(phrase => whoisText.includes(phrase))) {
         info.statusMessage = '未注册';
+        return info;
+    }
+
+    if (reservedPhrases.some(phrase => whoisText.includes(phrase))) {
+        info.statusMessage = '保留域名';
         return info;
     }
 
@@ -266,6 +286,11 @@ export function ParseWhois(whoisText: string): WhoisInformation {
     });
 
     info.icannWhoisInaccuracyComplaintFormURL = "https://www.icann.org/wicf/";
+
+    // If no domain name was found, it might mean the domain is available for registration
+    if (!info.domainName) {
+        info.statusMessage = '可注册';
+    }
 
     return info;
 }
