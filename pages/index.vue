@@ -22,7 +22,7 @@ useHead({
 <template>
   <div class="text-center mt-4">
     <div class="ad-space mx-auto my-4">
-      <span class="text-blue-500 text-5xl">𝓦𝓗𝓞𝓘𝓢.𝓛𝓢</span>
+      <span class="text-blue-500 text-5xl">𝐖𝐇𝐎𝐈𝐒.𝐋𝐒</span>
     </div>
   </div>
 </template>
