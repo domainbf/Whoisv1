@@ -1,9 +1,9 @@
 import { whois } from "~/server/whois/whois";
 
 export default defineEventHandler(async (event) => {
-    const body = await readBody(event)
+    const body = await readBody(event);
     try {
-        const res = await whois(body.domain)
+        const res = await whois(body.domain);
         if (res._raw.trim() === "") {
             // 如果获取不到域名数据，返回原始信息
             return `No match for "${body.domain}".
@@ -47,7 +47,12 @@ export default defineEventHandler(async (event) => {
         }
         return res._raw;
     } catch (e) {
-        return `No match for "${body.domain}".
+        if (e.message.includes("timeout")) {
+            return `The request to fetch WHOIS information for "${body.domain}" timed out. Please try again later or check your network connection.`;
+        } else if (e.message.includes("network error")) {
+            return `Network error occurred while fetching WHOIS information for "${body.domain}". Please check your internet connection and try again.`;
+        } else {
+            return `An error occurred while fetching WHOIS information for "${body.domain}". Please try again later or contact support if the issue persists.
 ` +
             `>>> Last update of whois database: ${new Date()} <<<
 ` +
@@ -84,6 +89,7 @@ export default defineEventHandler(async (event) => {
             'reserves the right to modify these terms at any time.\n' +
             '\n' +
             'The Registry database contains ONLY .COM, .NET, .EDU domains and\n' +
-            'Registrars.'
+            'Registrars.';
+        }
     }
 });
