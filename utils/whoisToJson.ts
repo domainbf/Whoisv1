@@ -1,5 +1,48 @@
 interface WhoisInformation {
-    // ... (所有字段保持不变)
+    domainName?: string;
+    registrar?: string;
+    creationDate?: string;
+    updatedDate?: string;
+    registryExpiryDate?: string;
+    domainStatus?: string[];
+    nameServers?: string[];
+    registrantName?: string;
+    registrantOrganization?: string;
+    registrantEmail?: string;
+    registrantPhone?: string;
+    registrantAddress?: string;
+    registrantCity?: string;
+    registrantState?: string;
+    registrantPostalCode?: string;
+    registrantCountry?: string;
+    adminName?: string;
+    adminOrganization?: string;
+    adminEmail?: string;
+    adminPhone?: string;
+    adminAddress?: string;
+    adminCity?: string;
+    adminState?: string;
+    adminPostalCode?: string;
+    adminCountry?: string;
+    techName?: string;
+    techOrganization?: string;
+    techEmail?: string;
+    techPhone?: string;
+    techAddress?: string;
+    techCity?: string;
+    techState?: string;
+    techPostalCode?: string;
+    techCountry?: string;
+    billingName?: string;
+    billingOrganization?: string;
+    billingEmail?: string;
+    billingPhone?: string;
+    billingAddress?: string;
+    billingCity?: string;
+    billingState?: string;
+    billingPostalCode?: string;
+    billingCountry?: string;
+    icannWhoisInaccuracyComplaintFormURL?: string;
 }
 
 export function ParseWhois(whoisText: string): WhoisInformation {
@@ -28,7 +71,6 @@ export function ParseWhois(whoisText: string): WhoisInformation {
     if (nameServersMatch) {
         info.nameServers = nameServersMatch[1].trim().split(/\s+/); // Split by whitespace
     }
-
 
     // 2. 联系人信息（注册人、管理联系人、技术联系人）- 使用更灵活的正则
     const contactRegex = /(Registrant|Administrative Contact|Technical Contact|Billing Contact):\s*([\s\S]*?)\n\n/gi; // g and i flags
@@ -95,7 +137,6 @@ export function ParseWhois(whoisText: string): WhoisInformation {
                 break;
         }
     }
-
 
     info.icannWhoisInaccuracyComplaintFormURL = "https://www.icann.org/wicf/";
     return info;
