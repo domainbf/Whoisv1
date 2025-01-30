@@ -51,14 +51,14 @@ interface WhoisInformation {
 }
 
 export function ParseWhois(whoisText: string): WhoisInformation {
-    const lines = whoisText.split('\n'); // Split text into lines
-    const info: WhoisInformation = {}; // Create an empty object to store extracted information
+    const lines = whoisText.split('\n');
+    const info: WhoisInformation = {};
 
     lines.forEach(line => {
-        const [key, value] = line.split(/:\s+/).map(part => part.trim()); // Use regex to handle more separator variants
-        if (!key || !value) return; // Skip empty or invalid lines
+        const [key, value] = line.split(/:\s+/).map(part => part.trim());
+        if (!key || !value) return;
 
-        switch (key.toLowerCase()) { // Use lowercase for matching
+        switch (key.toLowerCase()) {
             case 'domain name':
             case 'domain':
             case 'domainname':
@@ -109,7 +109,6 @@ export function ParseWhois(whoisText: string): WhoisInformation {
             case 'dnssec':
                 info.dnssec = value;
                 break;
-            // Additional fields for irregular domains
             case 'registrant name':
                 info.registrantName = value;
                 break;
@@ -217,6 +216,25 @@ export function ParseWhois(whoisText: string): WhoisInformation {
                 break;
             case 'billing country':
                 info.billingCountry = value;
+                break;
+            // Adding support for more irregular characters
+            case 'registration date':
+                info.creationDate = value;
+                break;
+            case 'expiration date':
+                info.registryExpiryDate = value;
+                break;
+            case 'dnssec status':
+                info.dnssec = value;
+                break;
+            case 'whois server':
+                info.registrarWHOISServer = value;
+                break;
+            case 'registrar address':
+                info.registrar = value;
+                break;
+            case 'registrar contact email':
+                info.registrantEmail = value;
                 break;
         }
     });
