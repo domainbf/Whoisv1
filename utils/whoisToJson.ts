@@ -62,6 +62,7 @@ export function ParseWhois(whoisText: string): WhoisInformation {
             case 'domain name':
             case 'domain':
             case 'domainname':
+            case 'omain':
                 info.domainName = value;
                 break;
             case 'registry domain id':
@@ -84,11 +85,13 @@ export function ParseWhois(whoisText: string): WhoisInformation {
             case 'creation date':
             case 'created date':
             case 'created':
+            case 'registration date':
                 info.creationDate = value;
                 break;
             case 'registry expiry date':
             case 'expiry date':
             case 'expires on':
+            case 'expiration date':
                 info.registryExpiryDate = value;
                 break;
             case 'registrar':
@@ -107,6 +110,7 @@ export function ParseWhois(whoisText: string): WhoisInformation {
                 info.nameServers = info.nameServers ? [...info.nameServers, value] : [value];
                 break;
             case 'dnssec':
+            case 'dnssec status':
                 info.dnssec = value;
                 break;
             case 'registrant name':
