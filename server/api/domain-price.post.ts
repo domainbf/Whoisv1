@@ -1,9 +1,7 @@
-// /server/api/domain-price.post.ts
 export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     try {
-        // 调用纳主米API获取域名价格信息
-        const response = await fetch('https://www.nazhumi.com/api/v1', {
+        const response = await fetch('https://who.cx/api/price', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
