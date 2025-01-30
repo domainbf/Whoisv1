@@ -53,7 +53,7 @@ export default defineI18nLocale(async locale => {
             onSubmit: '提交',
             title: 'Whois与Dns查询工具网站',
             description: '提供域名WHOIS查询、域名DNS查询、域名注册商查询、域名注册信息查询等服务',
-            keywords: '域名whois查询,whois查询,whois信息查询,whois查询工具,whois查询网站,whois查询api,whois查询接口',
+            keywords: '域名whois查询,whois.ls查询,whois信息查询,whois查询工具,whois查询网站,whois查询api,whois查询接口',
             //目前仅支持以下后缀
             support: '目前仅支持以下后缀',
         },
@@ -151,10 +151,10 @@ export default defineI18nLocale(async locale => {
             miscellaneous: '杂项设置',
             //重置所有数据
             reset: '重置所有数据',
-            //重置所有数据，你的自定义设置都将会丢失
-            resetDesc: '重置所有数据，你的自定义设置都将会丢失',
-            //确认重置所有数据？你的自定义设置都将会丢失！
-            resetConfirm: '确认重置所有数据？你的自定义设置都将会丢失！',
+            //重置所有数据，自定义设置都将会丢失
+            resetDesc: '重置所有数据，自定义设置都将会丢失',
+            //确认重置所有数据？自定义设置都将会丢失！
+            resetConfirm: '确认重置所有数据？自定义设置都将会丢失！',
             // 当前窗口
             currentWindow: '当前窗口',
             // 新窗口
