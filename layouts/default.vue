@@ -1,143 +1,131 @@
-interface WhoisInformation {
-    domainName?: string;
-    registrar?: string;
-    creationDate?: string;
-    updatedDate?: string;
-    registryExpiryDate?: string;
-    domainStatus?: string[];
-    nameServers?: string[];
-    registrantName?: string;
-    registrantOrganization?: string;
-    registrantEmail?: string;
-    registrantPhone?: string;
-    registrantAddress?: string;
-    registrantCity?: string;
-    registrantState?: string;
-    registrantPostalCode?: string;
-    registrantCountry?: string;
-    adminName?: string;
-    adminOrganization?: string;
-    adminEmail?: string;
-    adminPhone?: string;
-    adminAddress?: string;
-    adminCity?: string;
-    adminState?: string;
-    adminPostalCode?: string;
-    adminCountry?: string;
-    techName?: string;
-    techOrganization?: string;
-    techEmail?: string;
-    techPhone?: string;
-    techAddress?: string;
-    techCity?: string;
-    techState?: string;
-    techPostalCode?: string;
-    techCountry?: string;
-    billingName?: string;
-    billingOrganization?: string;
-    billingEmail?: string;
-    billingPhone?: string;
-    billingAddress?: string;
-    billingCity?: string;
-    billingState?: string;
-    billingPostalCode?: string;
-    billingCountry?: string;
-    icannWhoisInaccuracyComplaintFormURL?: string;
+<script setup lang="ts">
+import {SupportedTLDs} from "~/utils/domain";
+import {useStyleStore} from "~/stores/style";
+
+const { t } = useI18n()
+
+const state = reactive({
+  domain: '',
+})
+
+const toast = useToast();
+const router = useRouter();
+
+const runtimeConfig = useRuntimeConfig()
+const localePath = useLocalePath()
+
+
+const handleAction = async (url: any) => {
+  if (!state.domain) return toast.add({ title: '请输入域名，格式为：whois.ls' })
+  let domain = trimDomain(state.domain);
+  const parts = splitDomain(domain);
+
+  if (!validateDomain(parts) || !isTLDValid(parts)) return;
+
+  domain = updateDomainForTLD(parts);
+  state.domain = domain;
+
+  await router.push(localePath(`/${url}/${state.domain.replace(/\./g, '_')}.html`));
 }
 
-export function ParseWhois(whoisText: string): WhoisInformation {
-    const info: WhoisInformation = {};
 
-    // 1. 域名信息
-    const domainMatch = whoisText.match(/Domain Name:\s*(.*)/i); // i flag for case-insensitive matching
-    if (domainMatch) info.domainName = domainMatch[1].trim();
+const trimDomain = (domain: string): string => {
+  return domain.trim().toLowerCase(); // 确保域名为小写
+};
 
-    const registrarMatch = whoisText.match(/Registrar:\s*(.*)/i);
-    if (registrarMatch) info.registrar = registrarMatch[1].trim();
+const splitDomain = (domain: string): string[] => {
+  return domain.split('.');
+};
 
-    const creationDateMatch = whoisText.match(/Creation Date:\s*(.*)/i);
-    if (creationDateMatch) info.creationDate = creationDateMatch[1].trim();
+const validateDomain = (parts: string[]): boolean => {
+  if (parts.length < 2) {
+    toast.add({ title: '您输入的域名格式不正确!' });
+    return false;
+  }
+  return true;
+};
 
-    const modifiedDateMatch = whoisText.match(/Modified Date:\s*(.*)/i);
-    if (modifiedDateMatch) info.updatedDate = modifiedDateMatch[1].trim();
 
-    const expiryDateMatch = whoisText.match(/Expiration Date:\s*(.*)/i);
-    if (expiryDateMatch) info.registryExpiryDate = expiryDateMatch[1].trim();
+const isTLDValid = (parts: string[]): boolean => {
+  const lastPart = parts[parts.length - 1].toLowerCase(); // 获取最后一部分，并确保为小写
+  const potentialTLD = parts.slice(-2).join('.').toLowerCase(); // 获取可能的多部分TLD，并确保为小写
 
-    const domainStatusMatch = whoisText.match(/Domain Status:\s*(.*)/i);
-    if (domainStatusMatch) info.domainStatus = domainStatusMatch[1].trim().split(',').map(status => status.trim());
+  if (!SupportedTLDs.has(lastPart) && !SupportedTLDs.has(potentialTLD)) {
+    toast.add({ title: '您输入的域名后缀不合法!' });
+    return false;
+  }
+  return true;
+};
 
-    const nameServersMatch = whoisText.match(/Name Servers?:\s*([\s\S]*)/i);
-    if (nameServersMatch) {
-        info.nameServers = nameServersMatch[1].trim().split(/\s+/); // Split by whitespace
-    }
 
-    // 2. 联系人信息（注册人、管理联系人、技术联系人）- 使用更灵活的正则
-    const contactRegex = /(Registrant|Administrative Contact|Technical Contact|Billing Contact):\s*([\s\S]*?)\n\n/gi; // g and i flags
-    let contactMatch;
+const updateDomainForTLD = (parts: string[]): string => {
+  const potentialTLD = parts.slice(-2).join('.').toLowerCase(); // 确保为小写
+  let domainToKeep: string;
+  if (SupportedTLDs.has(potentialTLD)) {
+    domainToKeep = parts.length > 2 ? parts.slice(-3).join('.') : parts.join('.');
+  } else {
+    domainToKeep = parts.slice(-2).join('.');
+  }
+  return domainToKeep;
+};
 
-    while ((contactMatch = contactRegex.exec(whoisText)) !== null) {
-        const contactType = contactMatch[1].trim();
-        const contactInfo = contactMatch[2].trim();
+const styleStore = useStyleStore()
+const clientMounted = ref(false);
 
-        const nameMatch = contactInfo.match(/Name:\s*(.*)/i);
-        const organizationMatch = contactInfo.match(/Organization:\s*(.*)/i);
-        const emailMatch = contactInfo.match(/Email:\s*(.*)/i);
-        const phoneMatch = contactInfo.match(/Phone:\s*(.*)/i);
-        const addressMatch = contactInfo.match(/Address:\s*(.*)/i);
-        const cityMatch = contactInfo.match(/City:\s*(.*)/i);
-        const stateMatch = contactInfo.match(/State:\s*(.*)/i);
-        const postalCodeMatch = contactInfo.match(/Postal Code:\s*(.*)/i);
-        const countryMatch = contactInfo.match(/Country:\s*(.*)/i);
 
-        switch (contactType.toLowerCase()) {
-            case 'registrant':
-                info.registrantName = nameMatch ? nameMatch[1].trim() : null;
-                info.registrantOrganization = organizationMatch ? organizationMatch[1].trim() : null;
-                info.registrantEmail = emailMatch ? emailMatch[1].trim() : null;
-                info.registrantPhone = phoneMatch ? phoneMatch[1].trim() : null;
-                info.registrantAddress = addressMatch ? addressMatch[1].trim() : null;
-                info.registrantCity = cityMatch ? cityMatch[1].trim() : null;
-                info.registrantState = stateMatch ? stateMatch[1].trim() : null;
-                info.registrantPostalCode = postalCodeMatch ? postalCodeMatch[1].trim() : null;
-                info.registrantCountry = countryMatch ? countryMatch[1].trim() : null;
-                break;
-            case 'administrative contact':
-                info.adminName = nameMatch ? nameMatch[1].trim() : null;
-                info.adminOrganization = organizationMatch ? organizationMatch[1].trim() : null;
-                info.adminEmail = emailMatch ? emailMatch[1].trim() : null;
-                info.adminPhone = phoneMatch ? phoneMatch[1].trim() : null;
-                info.adminAddress = addressMatch ? addressMatch[1].trim() : null;
-                info.adminCity = cityMatch ? cityMatch[1].trim() : null;
-                info.adminState = stateMatch ? stateMatch[1].trim() : null;
-                info.adminPostalCode = postalCodeMatch ? postalCodeMatch[1].trim() : null;
-                info.adminCountry = countryMatch ? countryMatch[1].trim() : null;
-                break;
-            case 'technical contact':
-                info.techName = nameMatch ? nameMatch[1].trim() : null;
-                info.techOrganization = organizationMatch ? organizationMatch[1].trim() : null;
-                info.techEmail = emailMatch ? emailMatch[1].trim() : null;
-                info.techPhone = phoneMatch ? phoneMatch[1].trim() : null;
-                info.techAddress = addressMatch ? addressMatch[1].trim() : null;
-                info.techCity = cityMatch ? cityMatch[1].trim() : null;
-                info.techState = stateMatch ? stateMatch[1].trim() : null;
-                info.techPostalCode = postalCodeMatch ? postalCodeMatch[1].trim() : null;
-                info.techCountry = countryMatch ? countryMatch[1].trim() : null;
-                break;
-            case 'billing contact':
-                info.billingName = nameMatch ? nameMatch[1].trim() : null;
-                info.billingOrganization = organizationMatch ? organizationMatch[1].trim() : null;
-                info.billingEmail = emailMatch ? emailMatch[1].trim() : null;
-                info.billingPhone = phoneMatch ? phoneMatch[1].trim() : null;
-                info.billingAddress = addressMatch ? addressMatch[1].trim() : null;
-                info.billingCity = cityMatch ? cityMatch[1].trim() : null;
-                info.billingState = stateMatch ? stateMatch[1].trim() : null;
-                info.billingPostalCode = postalCodeMatch ? postalCodeMatch[1].trim() : null;
-                info.billingCountry = countryMatch ? countryMatch[1].trim() : null;
-                break;
-        }
-    }
+onMounted(() => {
+  clientMounted.value = true;
+});
+</script>
 
-    info.icannWhoisInaccuracyComplaintFormURL = "https://www.icann.org/wicf/";
-    return info;
-}
+<template>
+  <div
+      class="w-full text-xs bg-[#F1F3F4] dark:bg-transparent"
+      :class="{ 'h-[90vh]': !styleStore.getIsPage && clientMounted }"
+  >
+    <div
+        class=" max-w-screen-lg mx-auto px-[1em] pb-[10vh] "
+        :class="{ 'pt-[25vh]': !styleStore.getIsPage && clientMounted, 'pt-[5vh]': styleStore.getIsPage || !clientMounted }"
+    >
+      <nav class=" w-full text-[#464747] h-5 dark:bg-gray-700">
+        <NuxtLink class="mb-3 font-bold text-2xl inline-block text-current no-underline dark:text-white"
+                  :to="localePath('/')"
+        >
+          <h1 class="inline-block text-current no-underline dark:text-white">{{ runtimeConfig?.public?.Domain }}</h1>
+          <sup class="text-[#59a8d7] dark:text-[#ace4f8]">{{ runtimeConfig?.public?.DomainSuffix }}</sup>
+        </NuxtLink>
+      </nav>
+      <div class="mt-6">
+        <UForm :state="state"
+               class="flex items-center space-x-2 mb-3 dark:text-white"
+               @submit="handleAction('whois')">
+          <!-- 容器div用于水平布局 -->
+          <div class="flex-grow">
+            <UInput
+                v-model="state.domain"
+                :placeholder="t('index.placeholder')"
+                color="sky"
+                size="xl"
+                class="w-full " />
+          </div>
+          <!-- 使用v-if或v-show基于state.domain的值来控制按钮的显示 -->
+          <UButton type="submit" color="sky" size="xl" v-if="state.domain">
+            {{ t('index.onSubmit') }}
+          </UButton>
+        </UForm>
+      </div>
+     <CommonBulletin
+         v-if="!styleStore.isPage && clientMounted"
+         :text="`公告:  ${t('index.tips') }`"
+     />
+
+      <TabList @action="handleAction"  />
+      <slot />
+    </div>
+  </div>
+  <CommonFooter />
+</template>
+
+<style scoped>
+
+</style>
