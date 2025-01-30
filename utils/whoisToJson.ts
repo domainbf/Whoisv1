@@ -65,9 +65,9 @@ export function ParseWhois(whoisText: string): WhoisInformation {
     if (expiryDateMatch) info.registryExpiryDate = expiryDateMatch[1].trim();
 
     const domainStatusMatch = whoisText.match(/Domain Status:\s*(.*)/i);
-    if (domainStatusMatch) info.domainStatus = [domainStatusMatch[1].trim()];
+    if (domainStatusMatch) info.domainStatus = domainStatusMatch[1].trim().split(',').map(status => status.trim());
 
-    const nameServersMatch = whoisText.match(/Name Servers:\s*([\s\S]*)/i);
+    const nameServersMatch = whoisText.match(/Name Servers?:\s*([\s\S]*)/i);
     if (nameServersMatch) {
         info.nameServers = nameServersMatch[1].trim().split(/\s+/); // Split by whitespace
     }
