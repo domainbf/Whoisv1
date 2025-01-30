@@ -48,11 +48,32 @@ interface WhoisInformation {
     billingState?: string;
     billingPostalCode?: string;
     billingCountry?: string;
+    statusMessage?: string;
 }
+
+// Dictionary to map status codes to Chinese names
+const statusCodeMap: { [key: string]: string } = {
+    'ok': '正常',
+    'client delete prohibited': '客户端禁止删除',
+    'client hold': '客户端暂停',
+    'client renew prohibited': '客户端禁止续订',
+    'client transfer prohibited': '客户端禁止转移',
+    'client update prohibited': '客户端禁止更新',
+    'server delete prohibited': '服务器禁止删除',
+    'server hold': '服务器暂停',
+    'server renew prohibited': '服务器禁止续订',
+    'server transfer prohibited': '服务器禁止转移',
+    'server update prohibited': '服务器禁止更新'
+};
 
 export function ParseWhois(whoisText: string): WhoisInformation {
     const lines = whoisText.split('\n');
     const info: WhoisInformation = {};
+
+    if (whoisText.includes('No Object Found') || whoisText.includes('The queried object does not exist')) {
+        info.statusMessage = '未注册';
+        return info;
+    }
 
     lines.forEach(line => {
         const [key, value] = line.split(/:\s+/).map(part => part.trim());
@@ -102,7 +123,8 @@ export function ParseWhois(whoisText: string): WhoisInformation {
                 break;
             case 'domain status':
             case 'status':
-                info.domainStatus = info.domainStatus ? [...info.domainStatus, value] : [value];
+                const status = statusCodeMap[value.toLowerCase()] || value;
+                info.domainStatus = info.domainStatus ? [...info.domainStatus, status] : [status];
                 break;
             case 'name server':
             case 'nameserver':
