@@ -2,26 +2,32 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 
 const announcements = [
-  '您提交的域名查询信息不会被记录和保留！',
-  '如有任何问题和反馈可以联系我们，<a href="mailto:domain@nic.bn" class="text-blue-500 hover:underline">点击反馈</a>',
-  '本站域名出售，更多域名请前往<a href="http://domain.bf" target="_blank" class="text-blue-500 hover:underline">domain.bf</a>查看'
+  '我们不会记录和保留你提交的所有域名查询信息！',
+  '如有任何建议和反馈都可以联系我们，<a href="mailto:domain@nic.bn" class="text-blue-500 hover:underline">【点击反馈】</a>',
+  '本站域名可以出售，更多的域名请前往<a href="http://domain.bf" target="_blank" class="text-blue-500 hover:underline">domain.bf</a>查看！'
 ]
 
 const currentAnnouncement = ref(announcements[0])
+const isTransitioning = ref(false)
 let timer: NodeJS.Timer | null = null
 
 const getRandomAnnouncement = () => {
-  const currentIndex = announcements.indexOf(currentAnnouncement.value)
-  let newIndex
-  do {
-    newIndex = Math.floor(Math.random() * announcements.length)
-  } while (newIndex === currentIndex && announcements.length > 1)
+  isTransitioning.value = true
   
-  currentAnnouncement.value = announcements[newIndex]
+  setTimeout(() => {
+    const currentIndex = announcements.indexOf(currentAnnouncement.value)
+    let newIndex
+    do {
+      newIndex = Math.floor(Math.random() * announcements.length)
+    } while (newIndex === currentIndex && announcements.length > 1)
+    
+    currentAnnouncement.value = announcements[newIndex]
+    isTransitioning.value = false
+  }, 300) // 300ms后更换内容
 }
 
 onMounted(() => {
-  timer = setInterval(getRandomAnnouncement, 2500)
+  timer = setInterval(getRandomAnnouncement, 3500) // 调整为3.5秒
 })
 
 onUnmounted(() => {
@@ -34,7 +40,6 @@ onUnmounted(() => {
 <template>
   <div class="bg-gray-200 p-3 rounded-md mb-5 dark:bg-[#5b77af]">
     <div class="flex items-center">
-      <!-- 添加动画效果的喇叭图标 -->
       <div class="mr-3 flex items-center">
         <div class="animate-bounce">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -43,7 +48,13 @@ onUnmounted(() => {
         </div>
       </div>
       <div class="flex-grow">
-        <div class="text-sm text-gray-800 dark:text-white" v-html="currentAnnouncement"></div>
+        <transition name="fade">
+          <div 
+            class="text-sm text-gray-800 dark:text-white" 
+            v-html="currentAnnouncement"
+            :class="{ 'opacity-transition': isTransitioning }"
+          ></div>
+        </transition>
       </div>
     </div>
   </div>
@@ -52,7 +63,7 @@ onUnmounted(() => {
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.5s ease;
+  transition: opacity 0.3s ease;
 }
 
 .fade-enter-from,
@@ -60,7 +71,11 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-/* 添加喇叭图标的动画效果 */
+.opacity-transition {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
 @keyframes bounce {
   0%, 100% {
     transform: translateY(-25%);
