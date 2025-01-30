@@ -48,8 +48,8 @@ interface WhoisInformation {
 export function ParseWhois(whoisText: string): WhoisInformation {
     const info: WhoisInformation = {};
 
-    // 1. 域名信息
-    const domainMatch = whoisText.match(/Domain Name:\s*(.*)/i); // i flag for case-insensitive matching
+    // 1. Domain information
+    const domainMatch = whoisText.match(/Domain Name:\s*(.*)/i);
     if (domainMatch) info.domainName = domainMatch[1].trim();
 
     const registrarMatch = whoisText.match(/Registrar:\s*(.*)/i);
@@ -67,13 +67,13 @@ export function ParseWhois(whoisText: string): WhoisInformation {
     const domainStatusMatch = whoisText.match(/Domain Status:\s*(.*)/i);
     if (domainStatusMatch) info.domainStatus = domainStatusMatch[1].trim().split(',').map(status => status.trim());
 
-    const nameServersMatch = whoisText.match(/Name Servers?:\s*([\s\S]*)/i);
+    const nameServersMatch = whoisText.match(/Name Servers?:\s*([\s\S]*?)(?:\n\n|$)/i);
     if (nameServersMatch) {
-        info.nameServers = nameServersMatch[1].trim().split(/\s+/); // Split by whitespace
+        info.nameServers = nameServersMatch[1].trim().split(/\s+/);
     }
 
-    // 2. 联系人信息（注册人、管理联系人、技术联系人）- 使用更灵活的正则
-    const contactRegex = /(Registrant|Administrative Contact|Technical Contact|Billing Contact):\s*([\s\S]*?)\n\n/gi; // g and i flags
+    // 2. Contact information (Registrant, Administrative Contact, Technical Contact, Billing Contact)
+    const contactRegex = /(Registrant|Administrative Contact|Technical Contact|Billing Contact):\s*([\s\S]*?)(?:\n\n|$)/gi;
     let contactMatch;
 
     while ((contactMatch = contactRegex.exec(whoisText)) !== null) {
