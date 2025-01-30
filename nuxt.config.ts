@@ -17,11 +17,11 @@ export default defineNuxtConfig({
     public: {
       Domain: 'Domain+DNS Lookup',
       DomainSuffix: 'whois.ls',
-      siteName: 'Whois.ls', // 站点名称
+      siteName: 'Whois.ls Domain+DNS Lookup', // 站点名称
       siteDescription: 'whois.ls - Domain and DNS Lookup', // 站点描述
       siteUrl: 'https://whois.ls', // 站点 URL，必须包含域名
-      siteLogo: '/images/logo.png', // 站点 Logo 图片路径，建议放在 public/images 目录下
-      ogImage: '/images/share-image.png', // 分享图片路径，建议放在 public/images 目录下
+      siteLogo: '/images/whoisls.png', // 站点 Logo 图片路径，建议放在 public/images 目录下
+      ogImage: '/images/whois.ls.png', // 分享图片路径，建议放在 public/images 目录下
     },
   },
   app: {
