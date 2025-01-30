@@ -4,7 +4,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 const announcements = [
   '我们不会记录和保留你提交的所有域名查询信息！',
   '如有任何建议和反馈都可以联系我们，<a href="mailto:domain@nic.bn" class="text-blue-500 hover:underline">【点击反馈】</a>',
-  '本站域名可以出售，更多的域名请前往<a href="http://domain.bf" target="_blank" class="text-blue-500 hover:underline">domain.bf</a>查看！'
+  'whois.ls出售，更多的域名点击<a href="http://domain.bf" target="_blank" class="text-blue-500 hover:underline">domain.bf</a>查看！'
 ]
 
 const currentAnnouncement = ref(announcements[0])
