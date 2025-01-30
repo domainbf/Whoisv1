@@ -3,17 +3,17 @@ const colorMode = useColorMode()
 const availableColor = ref([
   {
     id: 1,
-    name: 'system',
+    name: '世界',
     icon: 'ph:laptop-duotone',
   },
   {
     id: 2,
-    name: 'dark',
+    name: '非黑',
     icon: 'ph:moon-stars-duotone',
   },
   {
     id: 3,
-    name: 'light',
+    name: '即白',
     icon: 'ph:sun-dim-duotone',
   },
 ])
