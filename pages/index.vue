@@ -21,8 +21,8 @@ useHead({
 
 <template>
   <div class="text-center mt-4">
-    <div class="ad-space mx-auto my-4 p-4 border rounded-lg">
-      <span class="text-blue-500 text-xl">whois.ls</span>
+    <div class="ad-space mx-auto my-4">
+      <span class="text-blue-500 text-5xl">𝓦𝓗𝓞𝓘𝓢.𝓛𝓢</span>
     </div>
   </div>
 </template>
@@ -32,7 +32,6 @@ useHead({
   width: 100%;
   max-width: 800px;
   min-height: 200px;
-  background-color: #f8f9fa;
   display: flex;
   align-items: center;
   justify-content: center;
