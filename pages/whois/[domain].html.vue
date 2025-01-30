@@ -38,7 +38,14 @@ if (!error.value && settingsStore.getHistory) {
   )
 }
 
+// Parse the whois information
 const parsedInfo = ParseWhois(data.value);
+
+// Automatically show raw data if no information is retrieved or no result is returned
+if (!parsedInfo.domainName && !parsedInfo.registrar && !parsedInfo.updatedDate && !parsedInfo.creationDate && !parsedInfo.registryExpiryDate && !parsedInfo.registrarIANAID && !parsedInfo.domainStatus && !parsedInfo.nameServers && !parsedInfo.dnssec) {
+  showRawData.value = true;
+}
+
 styleStore.setIsPage(true)
 useHead({
   title: `${domainData} - ${t('whois.title')}`,
