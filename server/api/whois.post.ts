@@ -3,6 +3,13 @@ import axios from "axios";
 
 export default defineEventHandler(async (event) => {
     const body = await readBody(event);
+
+    if (!body || !body.domain) {
+        return {
+            error: "Invalid request: Missing domain parameter."
+        };
+    }
+
     try {
         const res = await whois(body.domain);
         let domainInfo = {};
@@ -54,6 +61,10 @@ export default defineEventHandler(async (event) => {
                 domain: body.domain
             }
         });
+
+        if (!pricesRes.data) {
+            throw new Error("Failed to fetch domain prices");
+        }
 
         // Add the prices to the response
         domainInfo.prices = pricesRes.data;
