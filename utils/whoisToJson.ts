@@ -6,6 +6,7 @@ interface WhoisInformation {
     registryExpiryDate?: string;
     domainStatus?: string[];
     nameServers?: string[];
+    dnssec?: string;
     registrantName?: string;
     registrantOrganization?: string;
     registrantEmail?: string;
@@ -58,20 +59,23 @@ export function ParseWhois(whoisText: string): WhoisInformation {
     const creationDateMatch = whoisText.match(/Creation Date:\s*(.*)/i);
     if (creationDateMatch) info.creationDate = creationDateMatch[1].trim();
 
-    const modifiedDateMatch = whoisText.match(/Modified Date:\s*(.*)/i);
+    const modifiedDateMatch = whoisText.match(/Updated Date:\s*(.*)/i);
     if (modifiedDateMatch) info.updatedDate = modifiedDateMatch[1].trim();
 
-    const expiryDateMatch = whoisText.match(/Expiration Date:\s*(.*)/i);
+    const expiryDateMatch = whoisText.match(/Registry Expiry Date:\s*(.*)/i);
     if (expiryDateMatch) info.registryExpiryDate = expiryDateMatch[1].trim();
 
     const domainStatusMatch = whoisText.match(/Domain Status:\s*(.*)/i);
     if (domainStatusMatch) info.domainStatus = domainStatusMatch[1].trim().split(',').map(status => status.trim());
 
-    const nameServersMatch = whoisText.match(/Name Servers?:\s*([\s\S]*?)(?:\n\n|$)/i);
+    const nameServersMatch = whoisText.match(/Name Server:\s*([\s\S]*?)(?:\n\n|$)/gi);
     if (nameServersMatch) {
-        info.nameServers = nameServersMatch[1].trim().split(/\s+/);
+        info.nameServers = nameServersMatch.map(ns => ns.split(':')[1].trim());
     }
 
+    const dnssecMatch = whoisText.match(/DNSSEC:\s*(.*)/i);
+    if (dnssecMatch) info.dnssec = dnssecMatch[1].trim();
+    
     // 2. Contact information (Registrant, Administrative Contact, Technical Contact, Billing Contact)
     const contactRegex = /(Registrant|Administrative Contact|Technical Contact|Billing Contact):\s*([\s\S]*?)(?:\n\n|$)/gi;
     let contactMatch;
