@@ -1,12 +1,17 @@
 interface WhoisInformation {
     domainName?: string;
-    registrar?: string;
-    creationDate?: string;
+    registryDomainID?: string;
+    registrarWHOISServer?: string;
+    registrarURL?: string;
     updatedDate?: string;
+    creationDate?: string;
     registryExpiryDate?: string;
+    registrar?: string;
+    registrarIANAID?: string;
     domainStatus?: string[];
     nameServers?: string[];
     dnssec?: string;
+    icannWhoisInaccuracyComplaintFormURL?: string;
     registrantName?: string;
     registrantOrganization?: string;
     registrantEmail?: string;
@@ -43,105 +48,180 @@ interface WhoisInformation {
     billingState?: string;
     billingPostalCode?: string;
     billingCountry?: string;
-    icannWhoisInaccuracyComplaintFormURL?: string;
 }
 
 export function ParseWhois(whoisText: string): WhoisInformation {
-    const info: WhoisInformation = {};
+    const lines = whoisText.split('\n'); // Split text into lines
+    const info: WhoisInformation = {}; // Create an empty object to store extracted information
 
-    // 1. Domain information
-    const domainMatch = whoisText.match(/Domain Name:\s*(.*)/i);
-    if (domainMatch) info.domainName = domainMatch[1].trim();
+    lines.forEach(line => {
+        const [key, value] = line.split(/:\s+/).map(part => part.trim()); // Use regex to handle more separator variants
+        if (!key || !value) return; // Skip empty or invalid lines
 
-    const registrarMatch = whoisText.match(/Registrar:\s*(.*)/i);
-    if (registrarMatch) info.registrar = registrarMatch[1].trim();
-
-    const creationDateMatch = whoisText.match(/Creation Date:\s*(.*)/i);
-    if (creationDateMatch) info.creationDate = creationDateMatch[1].trim();
-
-    const modifiedDateMatch = whoisText.match(/Updated Date:\s*(.*)/i);
-    if (modifiedDateMatch) info.updatedDate = modifiedDateMatch[1].trim();
-
-    const expiryDateMatch = whoisText.match(/Registry Expiry Date:\s*(.*)/i);
-    if (expiryDateMatch) info.registryExpiryDate = expiryDateMatch[1].trim();
-
-    const domainStatusMatch = whoisText.match(/Domain Status:\s*(.*)/i);
-    if (domainStatusMatch) info.domainStatus = domainStatusMatch[1].trim().split(',').map(status => status.trim());
-
-    const nameServersMatch = whoisText.match(/Name Server:\s*([\s\S]*?)(?:\n\n|$)/gi);
-    if (nameServersMatch) {
-        info.nameServers = nameServersMatch.map(ns => ns.split(':')[1].trim());
-    }
-
-    const dnssecMatch = whoisText.match(/DNSSEC:\s*(.*)/i);
-    if (dnssecMatch) info.dnssec = dnssecMatch[1].trim();
-    
-    // 2. Contact information (Registrant, Administrative Contact, Technical Contact, Billing Contact)
-    const contactRegex = /(Registrant|Administrative Contact|Technical Contact|Billing Contact):\s*([\s\S]*?)(?:\n\n|$)/gi;
-    let contactMatch;
-
-    while ((contactMatch = contactRegex.exec(whoisText)) !== null) {
-        const contactType = contactMatch[1].trim();
-        const contactInfo = contactMatch[2].trim();
-
-        const nameMatch = contactInfo.match(/Name:\s*(.*)/i);
-        const organizationMatch = contactInfo.match(/Organization:\s*(.*)/i);
-        const emailMatch = contactInfo.match(/Email:\s*(.*)/i);
-        const phoneMatch = contactInfo.match(/Phone:\s*(.*)/i);
-        const addressMatch = contactInfo.match(/Address:\s*(.*)/i);
-        const cityMatch = contactInfo.match(/City:\s*(.*)/i);
-        const stateMatch = contactInfo.match(/State:\s*(.*)/i);
-        const postalCodeMatch = contactInfo.match(/Postal Code:\s*(.*)/i);
-        const countryMatch = contactInfo.match(/Country:\s*(.*)/i);
-
-        switch (contactType.toLowerCase()) {
-            case 'registrant':
-                info.registrantName = nameMatch ? nameMatch[1].trim() : null;
-                info.registrantOrganization = organizationMatch ? organizationMatch[1].trim() : null;
-                info.registrantEmail = emailMatch ? emailMatch[1].trim() : null;
-                info.registrantPhone = phoneMatch ? phoneMatch[1].trim() : null;
-                info.registrantAddress = addressMatch ? addressMatch[1].trim() : null;
-                info.registrantCity = cityMatch ? cityMatch[1].trim() : null;
-                info.registrantState = stateMatch ? stateMatch[1].trim() : null;
-                info.registrantPostalCode = postalCodeMatch ? postalCodeMatch[1].trim() : null;
-                info.registrantCountry = countryMatch ? countryMatch[1].trim() : null;
+        switch (key.toLowerCase()) { // Use lowercase for matching
+            case 'domain name':
+            case 'domain':
+            case 'domainname':
+                info.domainName = value;
                 break;
-            case 'administrative contact':
-                info.adminName = nameMatch ? nameMatch[1].trim() : null;
-                info.adminOrganization = organizationMatch ? organizationMatch[1].trim() : null;
-                info.adminEmail = emailMatch ? emailMatch[1].trim() : null;
-                info.adminPhone = phoneMatch ? phoneMatch[1].trim() : null;
-                info.adminAddress = addressMatch ? addressMatch[1].trim() : null;
-                info.adminCity = cityMatch ? cityMatch[1].trim() : null;
-                info.adminState = stateMatch ? stateMatch[1].trim() : null;
-                info.adminPostalCode = postalCodeMatch ? postalCodeMatch[1].trim() : null;
-                info.adminCountry = countryMatch ? countryMatch[1].trim() : null;
+            case 'registry domain id':
+            case 'domain id':
+                info.registryDomainID = value;
                 break;
-            case 'technical contact':
-                info.techName = nameMatch ? nameMatch[1].trim() : null;
-                info.techOrganization = organizationMatch ? organizationMatch[1].trim() : null;
-                info.techEmail = emailMatch ? emailMatch[1].trim() : null;
-                info.techPhone = phoneMatch ? phoneMatch[1].trim() : null;
-                info.techAddress = addressMatch ? addressMatch[1].trim() : null;
-                info.techCity = cityMatch ? cityMatch[1].trim() : null;
-                info.techState = stateMatch ? stateMatch[1].trim() : null;
-                info.techPostalCode = postalCodeMatch ? postalCodeMatch[1].trim() : null;
-                info.techCountry = countryMatch ? countryMatch[1].trim() : null;
+            case 'registrar whois server':
+            case 'whois server':
+                info.registrarWHOISServer = value;
                 break;
-            case 'billing contact':
-                info.billingName = nameMatch ? nameMatch[1].trim() : null;
-                info.billingOrganization = organizationMatch ? organizationMatch[1].trim() : null;
-                info.billingEmail = emailMatch ? emailMatch[1].trim() : null;
-                info.billingPhone = phoneMatch ? phoneMatch[1].trim() : null;
-                info.billingAddress = addressMatch ? addressMatch[1].trim() : null;
-                info.billingCity = cityMatch ? cityMatch[1].trim() : null;
-                info.billingState = stateMatch ? stateMatch[1].trim() : null;
-                info.billingPostalCode = postalCodeMatch ? postalCodeMatch[1].trim() : null;
-                info.billingCountry = countryMatch ? countryMatch[1].trim() : null;
+            case 'registrar url':
+            case 'url':
+                info.registrarURL = value;
+                break;
+            case 'updated date':
+            case 'last updated':
+            case 'last modified':
+                info.updatedDate = value;
+                break;
+            case 'creation date':
+            case 'created date':
+            case 'created':
+                info.creationDate = value;
+                break;
+            case 'registry expiry date':
+            case 'expiry date':
+            case 'expires on':
+                info.registryExpiryDate = value;
+                break;
+            case 'registrar':
+                info.registrar = value;
+                break;
+            case 'registrar iana id':
+                info.registrarIANAID = value;
+                break;
+            case 'domain status':
+            case 'status':
+                info.domainStatus = info.domainStatus ? [...info.domainStatus, value] : [value];
+                break;
+            case 'name server':
+            case 'nameserver':
+            case 'nserver':
+                info.nameServers = info.nameServers ? [...info.nameServers, value] : [value];
+                break;
+            case 'dnssec':
+                info.dnssec = value;
+                break;
+            // Additional fields for irregular domains
+            case 'registrant name':
+                info.registrantName = value;
+                break;
+            case 'registrant organization':
+                info.registrantOrganization = value;
+                break;
+            case 'registrant email':
+                info.registrantEmail = value;
+                break;
+            case 'registrant phone':
+                info.registrantPhone = value;
+                break;
+            case 'registrant address':
+                info.registrantAddress = value;
+                break;
+            case 'registrant city':
+                info.registrantCity = value;
+                break;
+            case 'registrant state':
+                info.registrantState = value;
+                break;
+            case 'registrant postal code':
+                info.registrantPostalCode = value;
+                break;
+            case 'registrant country':
+                info.registrantCountry = value;
+                break;
+            case 'admin name':
+                info.adminName = value;
+                break;
+            case 'admin organization':
+                info.adminOrganization = value;
+                break;
+            case 'admin email':
+                info.adminEmail = value;
+                break;
+            case 'admin phone':
+                info.adminPhone = value;
+                break;
+            case 'admin address':
+                info.adminAddress = value;
+                break;
+            case 'admin city':
+                info.adminCity = value;
+                break;
+            case 'admin state':
+                info.adminState = value;
+                break;
+            case 'admin postal code':
+                info.adminPostalCode = value;
+                break;
+            case 'admin country':
+                info.adminCountry = value;
+                break;
+            case 'tech name':
+                info.techName = value;
+                break;
+            case 'tech organization':
+                info.techOrganization = value;
+                break;
+            case 'tech email':
+                info.techEmail = value;
+                break;
+            case 'tech phone':
+                info.techPhone = value;
+                break;
+            case 'tech address':
+                info.techAddress = value;
+                break;
+            case 'tech city':
+                info.techCity = value;
+                break;
+            case 'tech state':
+                info.techState = value;
+                break;
+            case 'tech postal code':
+                info.techPostalCode = value;
+                break;
+            case 'tech country':
+                info.techCountry = value;
+                break;
+            case 'billing name':
+                info.billingName = value;
+                break;
+            case 'billing organization':
+                info.billingOrganization = value;
+                break;
+            case 'billing email':
+                info.billingEmail = value;
+                break;
+            case 'billing phone':
+                info.billingPhone = value;
+                break;
+            case 'billing address':
+                info.billingAddress = value;
+                break;
+            case 'billing city':
+                info.billingCity = value;
+                break;
+            case 'billing state':
+                info.billingState = value;
+                break;
+            case 'billing postal code':
+                info.billingPostalCode = value;
+                break;
+            case 'billing country':
+                info.billingCountry = value;
                 break;
         }
-    }
+    });
 
     info.icannWhoisInaccuracyComplaintFormURL = "https://www.icann.org/wicf/";
+
     return info;
 }
