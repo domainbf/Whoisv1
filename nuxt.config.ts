@@ -22,6 +22,8 @@ export default defineNuxtConfig({
       siteUrl: 'https://whois.ls', // 站点 URL，必须包含域名
       siteLogo: '/images/whoisls.png', // 站点 Logo 图片路径，建议放在 public/images 目录下
       ogImage: '/images/whois.ls.png', // 分享图片路径，建议放在 public/images 目录下
+      // 新增：略缩图配置
+      thumbnail: '/images/whois.ls.png', // 略缩图路径，建议放在 public/images 目录下
     },
   },
   app: {
@@ -84,6 +86,12 @@ export default defineNuxtConfig({
           hid: 'twitter:image',
           name: 'twitter:image',
           content: () => useRuntimeConfig().public.siteUrl + useRuntimeConfig().public.ogImage, // 完整的 twitter:image URL
+        },
+        // 新增：微信分享所需的 meta 标签
+        {
+          hid: 'wx:image',
+          property: 'wx:image',
+          content: () => useRuntimeConfig().public.siteUrl + useRuntimeConfig().public.thumbnail, // 微信分享图片 URL
         },
       ],
       link: [
