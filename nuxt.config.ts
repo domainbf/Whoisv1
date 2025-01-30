@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       Domain: 'Domain+DNS Lookup',
-      DomainSuffix: 'whois.ls',
+      DomainSuffix: '0.1.0',
       siteName: 'Whois.ls Domain+DNS Lookup', // 站点名称
       siteDescription: 'whois.ls - Domain and DNS Lookup', // 站点描述
       siteUrl: 'https://whois.ls', // 站点 URL，必须包含域名
