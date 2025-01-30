@@ -16,7 +16,7 @@ const localePath = useLocalePath()
 
 
 const handleAction = async (url: any) => {
-  if (!state.domain) return toast.add({ title: '请输入域名' })
+  if (!state.domain) return toast.add({ title: '请输入域名，格式为：whois.ls' })
   let domain = trimDomain(state.domain);
   const parts = splitDomain(domain);
 
@@ -39,7 +39,7 @@ const splitDomain = (domain: string): string[] => {
 
 const validateDomain = (parts: string[]): boolean => {
   if (parts.length < 2) {
-    toast.add({ title: '域名格式不正确' });
+    toast.add({ title: '您输入的域名格式不正确!' });
     return false;
   }
   return true;
@@ -51,7 +51,7 @@ const isTLDValid = (parts: string[]): boolean => {
   const potentialTLD = parts.slice(-2).join('.').toLowerCase(); // 获取可能的多部分TLD，并确保为小写
 
   if (!SupportedTLDs.has(lastPart) && !SupportedTLDs.has(potentialTLD)) {
-    toast.add({ title: '域名后缀不合法' });
+    toast.add({ title: '您输入的域名后缀不合法!' });
     return false;
   }
   return true;
@@ -116,7 +116,7 @@ onMounted(() => {
       </div>
      <CommonBulletin
          v-if="!styleStore.isPage && clientMounted"
-         :text="`公告: ${t('index.tips') }`"
+         :text="`公告:  ${t('index.tips') }`"
      />
 
       <TabList @action="handleAction"  />
