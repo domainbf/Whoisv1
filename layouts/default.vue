@@ -15,11 +15,16 @@ const runtimeConfig = useRuntimeConfig();
 const localePath = useLocalePath();
 
 const handleAction = async (url: any) => {
-  if (!state.domain) return toast.add({ title: "请输入域名，格式为：whois.ls" });
+  if (!state.domain) {
+    showToast("请输入域名，格式为：whois.ls");
+    return;
+  }
+
   let domain = trimDomain(state.domain);
   const parts = splitDomain(domain);
 
-  if (!validateDomain(parts) || !isTLDValid(parts)) return;
+  if (!validateDomain(parts)) return;
+  if (!isTLDValid(parts)) return;
 
   domain = updateDomainForTLD(parts);
   state.domain = domain;
@@ -28,34 +33,34 @@ const handleAction = async (url: any) => {
 };
 
 const trimDomain = (domain: string): string => {
-  return domain.trim().toLowerCase(); // 确保域名为小写
+  return domain.trim().toLowerCase();
 };
 
-const splitDomain = (domain: string[]): string[] => {
+const splitDomain = (domain: string): string[] => {
   return domain.split(".");
 };
 
 const validateDomain = (parts: string[]): boolean => {
   if (parts.length < 2) {
-    toast.add({ title: "您输入的域名格式不正确!" });
+    showToast("您输入的域名格式不正确!");
     return false;
   }
   return true;
 };
 
 const isTLDValid = (parts: string[]): boolean => {
-  const lastPart = parts[parts.length - 1].toLowerCase(); // 获取最后一部分，并确保为小写
-  const potentialTLD = parts.slice(-2).join(".").toLowerCase(); // 获取可能的多部分TLD，并确保为小写
+  const lastPart = parts[parts.length - 1].toLowerCase();
+  const potentialTLD = parts.slice(-2).join(".").toLowerCase();
 
   if (!SupportedTLDs.has(lastPart) && !SupportedTLDs.has(potentialTLD)) {
-    toast.add({ title: "您输入的域名后缀不合法!" });
+    showToast("您输入的域名后缀不合法!");
     return false;
   }
   return true;
 };
 
 const updateDomainForTLD = (parts: string[]): string => {
-  const potentialTLD = parts.slice(-2).join(".").toLowerCase(); // 确保为小写
+  const potentialTLD = parts.slice(-2).join(".").toLowerCase();
   let domainToKeep: string;
   if (SupportedTLDs.has(potentialTLD)) {
     domainToKeep = parts.length > 2 ? parts.slice(-3).join(".") : parts.join(".");
@@ -71,6 +76,14 @@ const clientMounted = ref(false);
 onMounted(() => {
   clientMounted.value = true;
 });
+
+const showToast = (message: string) => {
+  toast.add({
+    title: message,
+    position: "center", // 将提示信息放在屏幕中间
+    duration: 3000, // 设置提示信息的显示时间（可选）
+  });
+};
 </script>
 
 <template>
@@ -92,7 +105,7 @@ onMounted(() => {
         </NuxtLink>
       </nav>
 
-      <div class="mt-6 flex flex-col items-center">
+      <div class="mt-6">
         <UForm
           :state="state"
           class="flex items-center space-x-2 mb-3 dark:text-white"
@@ -111,12 +124,11 @@ onMounted(() => {
             {{ t('index.onSubmit') }}
           </UButton>
         </UForm>
-        <CommonBulletin
-          v-if="!styleStore.isPage && clientMounted"
-          class="text-center"
-          :text="`公告:  ${t('index.tips') }`"
-        />
       </div>
+      <CommonBulletin
+        v-if="!styleStore.isPage && clientMounted"
+        :text="`公告:  ${t('index.tips') }`"
+      />
 
       <TabList @action="handleAction" />
       <slot />
