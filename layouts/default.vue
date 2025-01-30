@@ -37,7 +37,7 @@ const handleAction = async (url: any) => {
   domain = updateDomainForTLD(parts);
   state.domain = domain;
 
-  await router.push(localePath(`/<span class="math-inline">\{url\}/</span>{state.domain.replace(/\./g, '_')}.html`));
+  await router.push(localePath(`/${url}/${state.domain.replace(/\./g, '_')}.html`));
 }
 
 
@@ -92,12 +92,12 @@ onMounted(() => {
 
 <template>
   <div
-    class="w-full text-xs bg-[#F1F3F4] dark:bg-transparent"
-    :class="{ 'h-[90vh]': !styleStore.getIsPage && clientMounted }"
+      class="w-full text-xs bg-[#F1F3F4] dark:bg-transparent"
+      :class="{ 'h-[90vh]': !styleStore.getIsPage && clientMounted }"
   >
     <div
-      class=" max-w-screen-lg mx-auto px-[1em] pb-[10vh] "
-      :class="{ 'pt-[25vh]': !styleStore.getIsPage && clientMounted, 'pt-[5vh]': styleStore.getIsPage || !clientMounted }"
+        class=" max-w-screen-lg mx-auto px-[1em] pb-[10vh] "
+        :class="{ 'pt-[25vh]': !styleStore.getIsPage && clientMounted, 'pt-[5vh]': styleStore.getIsPage || !clientMounted }"
     >
       <nav class=" w-full text-[#464747] h-5 dark:bg-gray-700">
         <NuxtLink class="mb-3 font-bold text-2xl inline-block text-current no-underline dark:text-white"
@@ -124,15 +124,10 @@ onMounted(() => {
           </UButton>
         </UForm>
       </div>
-      <CommonBulletin
-        v-if="!styleStore.isPage && clientMounted"
-      >
-        <template #prepend>  <img 
-            src="/images/gonggao.gif" 
-            alt="公告" 
-            class="inline-block align-middle mr-1"  :style="{ height: '1em', width: 'auto' }"  />
-        </template>
-        <span>{{ t('index.tips') }}</span>  </CommonBulletin>
+     <CommonBulletin
+         v-if="!styleStore.isPage && clientMounted"
+         :text="`➡️ ${t('index.tips') }`"
+     />
 
       <TabList @action="handleAction"  />
       <slot />
@@ -142,4 +137,5 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* You
+
+</style>
