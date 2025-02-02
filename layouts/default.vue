@@ -91,11 +91,11 @@ const showToast = (message: string) => {
     <div class="flex-grow">
       <div
         class="w-full text-xs bg-[#F1F3F4] dark:bg-transparent"
-        :class="{ 'h-[90vh]': !styleStore.getIsPage && clientMounted }"
+        :class="{ 'min-h-screen': !styleStore.getIsPage && clientMounted }"
       >
         <div
-          class="max-w-screen-lg mx-auto px-[1em] pb-[10vh]"
-          :class="{ 'pt-[25vh]': !styleStore.getIsPage && clientMounted, 'pt-[5vh]': styleStore.getIsPage || !clientMounted }"
+          class="max-w-screen-lg mx-auto px-[1em]"
+          :class="{ 'pt-[10vh]': !styleStore.getIsPage && clientMounted, 'pt-[5vh]': styleStore.getIsPage || !clientMounted }"
         >
           <nav class="w-full text-[#464747] h-5 dark:bg-gray-700">
             <NuxtLink
