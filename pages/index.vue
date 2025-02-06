@@ -1,39 +1,58 @@
-<script setup lang="ts">
-import {useStyleStore} from "~/stores/style";
+// 在现有的 validateDomain 函数后添加
+const getWhoisServer = (domain: string) => {
+  const tld = domain.split('.').pop()?.toLowerCase();
+  if (!tld) return null;
+  return whoisServers[tld as keyof typeof whoisServers];
+};
 
-const styleStore = useStyleStore()
-styleStore.setIsPage(false)
+// 修改现有的 handleWhoisLookup 函数
+const handleWhoisLookup = async () => {
+  const trimmedDomain = domain.trim().toLowerCase();
+  
+  if (!trimmedDomain) {
+    toast({
+      title: "错误",
+      description: "请输入域名",
+      variant: "destructive",
+    });
+    return;
+  }
 
-const {t} = useI18n()
-useHead({
-  title: `${t('index.title')} - ${t('app.title')}`,
-  meta: [
-    {
-      name: 'description',
-      content: t('index.description')
-    },{
-      name: 'keywords',
-      content: t('index.keywords')
+  if (!validateDomain(trimmedDomain)) {
+    toast({
+      title: "错误",
+      description: "请输入有效的域名格式 (例如: example.com)",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const whoisServer = getWhoisServer(trimmedDomain);
+  if (!whoisServer) {
+    toast({
+      title: "错误",
+      description: "不支持该域名后缀",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  setIsLoading(true);
+  setError(null);
+  setWhoisData(null);
+
+  try {
+    const response = await fetch(`/api/whois?domain=${trimmedDomain}&server=${whoisServer}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || '查询失败');
     }
-  ]
-})
-</script>
-
-<template>
-  <div class="text-center mt-4">
-    <div class="ad-space mx-auto my-4">
-      <span class="text-5xl">𝕎𝕙𝕠𝕚𝕤.𝕃𝕤</span>
-    </div>
-  </div>
-</template>
-
-<style scoped>
-.ad-space {
-  width: 100%;
-  max-width: 800px;
-  min-height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-</style>
+    
+    setWhoisData(data);
+  } catch (err) {
+    setError(err instanceof Error ? err.message : "查询失败，请稍后重试");
+  } finally {
+    setIsLoading(false);
+  }
+};
