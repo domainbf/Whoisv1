@@ -90,55 +90,58 @@ export function ParseWhois(whoisText: string): WhoisInformation {
         return info;
     }
 
-    // 提取主域名和TLD
-    let tld = '';
-    let domainMatch = whoisText.match(/Domain Name:\s*([^\s]+)/i);
-    if (domainMatch) {
-        tld = domainMatch[1].split('.').pop() || '';
-        info.domainName = domainMatch[1];
-    }
+    // 检查是否.sn域名（法语字段）
+    const isSnFr = /Nom de domaine:/i.test(whoisText);
 
-    // 针对.sn域
-    if (tld === 'sn') {
+    if (isSnFr) {
+        let billingSection = false;
+        let billing: any = {};
+
         lines.forEach(line => {
-            if (line.startsWith('Registrant Name:')) {
-                info.registrantName = line.split(':')[1].trim();
+            // 域名主信息
+            if (/^Nom de domaine:/i.test(line)) {
+                info.domainName = line.split(':')[1].trim();
             }
-            if (line.startsWith('Registrar:')) {
-                info.registrar = line.split(':')[1].trim();
-            }
-            if (line.startsWith('Creation Date:')) {
+            if (/^Date de création:/i.test(line)) {
                 info.creationDate = line.split(':')[1].trim();
             }
-            if (line.startsWith('Expiration Date:')) {
+            if (/^Dernière modification:/i.test(line)) {
+                info.updatedDate = line.split(':')[1].trim();
+            }
+            if (/^Date d'expiration:/i.test(line)) {
                 info.registryExpiryDate = line.split(':')[1].trim();
             }
-            if (line.startsWith('Name Server:')) {
-                if (!info.nameServers) info.nameServers = [];
-                info.nameServers.push(line.split(':')[1].trim());
-            }
-        });
-    }
-    // 针对.tn域
-    else if (tld === 'tn') {
-        lines.forEach(line => {
-            if (line.startsWith('Holder:')) {
-                info.registrantName = line.split(':')[1].trim();
-            }
-            if (line.startsWith('Registrar:')) {
+            if (/^Registrar:/i.test(line)) {
                 info.registrar = line.split(':')[1].trim();
             }
-            if (line.startsWith('Created:')) {
-                info.creationDate = line.split(':')[1].trim();
+            if (/^Statut:/i.test(line)) {
+                info.domainStatus = [line.split(':')[1].trim()];
             }
-            if (line.startsWith('Expires:')) {
-                info.registryExpiryDate = line.split(':')[1].trim();
-            }
-            if (line.startsWith('Nameserver:')) {
-                if (!info.nameServers) info.nameServers = [];
-                info.nameServers.push(line.split(':')[1].trim());
+
+            // 账单联系人块开始
+            if (/^\[BILLING_C\]/i.test(line)) billingSection = true;
+            // 账单联系人字段提取
+            if (billingSection) {
+                if (/^ID Contact:/i.test(line)) billing.billingId = line.split(':')[1].trim();
+                if (/^Type:/i.test(line)) billing.billingType = line.split(':')[1].trim();
+                if (/^Nom:/i.test(line)) billing.billingName = line.split(':')[1].trim();
+                if (/^Adresse:/i.test(line)) billing.billingAddress = line.split(':')[1].trim();
+                if (/^Code postal:/i.test(line)) billing.billingPostalCode = line.split(':')[1].trim();
+                if (/^Ville:/i.test(line)) billing.billingCity = line.split(':')[1].trim();
+                if (/^Pays:/i.test(line)) billing.billingCountry = line.split(':')[1].trim();
+                if (/^Téléphone:/i.test(line)) billing.billingPhone = line.split(':')[1].trim();
+                if (/^Courriel:/i.test(line)) billing.billingEmail = line.split(':')[1].trim();
             }
         });
+
+        // 合并账单字段到 info
+        if (billing.billingName) info.billingName = billing.billingName;
+        if (billing.billingAddress) info.billingAddress = billing.billingAddress;
+        if (billing.billingPostalCode) info.billingPostalCode = billing.billingPostalCode;
+        if (billing.billingCity) info.billingCity = billing.billingCity;
+        if (billing.billingCountry) info.billingCountry = billing.billingCountry;
+        if (billing.billingPhone) info.billingPhone = billing.billingPhone;
+        if (billing.billingEmail) info.billingEmail = billing.billingEmail;
     } else {
         // 其他TLD继续走原有逻辑
         lines.forEach(line => {
@@ -188,8 +191,7 @@ export function ParseWhois(whoisText: string): WhoisInformation {
                     break;
                 case 'domain status':
                 case 'status':
-                    const status = statusCodeMap[value.toLowerCase()] || value;
-                    info.domainStatus = info.domainStatus ? [...info.domainStatus, status] : [status];
+                    info.domainStatus = info.domainStatus ? [...info.domainStatus, value] : [value];
                     break;
                 case 'name server':
                 case 'nameserver':
@@ -308,34 +310,13 @@ export function ParseWhois(whoisText: string): WhoisInformation {
                 case 'billing country':
                     info.billingCountry = value;
                     break;
-                // Adding support for more irregular characters
-                case 'registration date':
-                    info.creationDate = value;
-                    break;
-                case 'expiration date':
-                    info.registryExpiryDate = value;
-                    break;
-                case 'dnssec status':
-                    info.dnssec = value;
-                    break;
-                case 'whois server':
-                    info.registrarWHOISServer = value;
-                    break;
-                case 'registrar address':
-                    info.registrar = value;
-                    break;
-                case 'registrar contact email':
-                    info.registrantEmail = value;
-                    break;
             }
         });
     }
 
     info.icannWhoisInaccuracyComplaintFormURL = "https://www.icann.org/wicf/";
-
     if (!info.domainName) {
         info.statusMessage = '可注册';
     }
-
     return info;
 }
