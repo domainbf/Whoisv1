@@ -68,7 +68,6 @@ const statusCodeMap: { [key: string]: string } = {
 
 // 状态字符串解析（兼容带URL及多行）
 function parseStatusLine(line: string): string[] {
-    // 先去除所有URL和多余空格，分割每一行
     return (
         line
             .split(/[\n,]+/)
@@ -94,28 +93,67 @@ function safeDate(s: string | undefined): string | undefined {
     return d.toISOString();
 }
 
-export function ParseWhois(whoisText: string): WhoisInformation {
-    const lines = whoisText.split('\n');
-    const info: WhoisInformation = {};
-
-    // 未注册/保留域名判断
+// 未注册和保留域名的增强判断
+function checkUnregisteredReserved(whoisText: string): {unregistered: boolean, reserved: boolean, message: string} {
     const notRegisteredPhrases = [
         'No Object Found',
         'The queried object does not exist',
         'No match for domain',
+        'No entries found',
         'Domain not found',
-        'Not Registered'
+        'Not Registered',
+        'is free',
+        'Status: free',
+        'Status: Available',
+        'no data found',
+        'not been registered',
+        'The domain has not been registered',
+        'not registered',
+        'Object_Not_Found'
     ];
     const reservedPhrases = [
         'Reserved Name',
-        'This domain is reserved'
+        'This domain is reserved',
+        'is reserved',
+        'Status: Reserved',
+        'reserved by registry',
+        'reserved domain'
     ];
-    if (notRegisteredPhrases.some(phrase => whoisText.includes(phrase))) {
-        info.statusMessage = '未注册';
+
+    for (const phrase of notRegisteredPhrases) {
+        if (whoisText.toLowerCase().includes(phrase.toLowerCase())) {
+            return {unregistered: true, reserved: false, message: '未注册（可注册）'};
+        }
+    }
+    for (const phrase of reservedPhrases) {
+        if (whoisText.toLowerCase().includes(phrase.toLowerCase())) {
+            return {unregistered: false, reserved: true, message: '保留域名'};
+        }
+    }
+    // 额外：部分whois会有Available、未分配、free等短语
+    if (/status:\s*available/i.test(whoisText) || /\bavailable\b/i.test(whoisText)) {
+        return {unregistered: true, reserved: false, message: '未注册（可注册）'};
+    }
+    if (/status:\s*reserved/i.test(whoisText) || /\breserved\b/i.test(whoisText)) {
+        return {unregistered: false, reserved: true, message: '保留域名'};
+    }
+    return {unregistered: false, reserved: false, message: ''};
+}
+
+export function ParseWhois(whoisText: string): WhoisInformation {
+    const lines = whoisText.split('\n');
+    const info: WhoisInformation = {};
+
+    // 增强未注册/保留域名判断
+    const statusCheck = checkUnregisteredReserved(whoisText);
+    if (statusCheck.unregistered) {
+        info.statusMessage = statusCheck.message;
+        info.domainStatus = [statusCheck.message];
         return info;
     }
-    if (reservedPhrases.some(phrase => whoisText.includes(phrase))) {
-        info.statusMessage = '保留域名';
+    if (statusCheck.reserved) {
+        info.statusMessage = statusCheck.message;
+        info.domainStatus = [statusCheck.message];
         return info;
     }
 
@@ -327,8 +365,9 @@ export function ParseWhois(whoisText: string): WhoisInformation {
     if (billing.billingEmail) info.billingEmail = billing.billingEmail;
 
     info.icannWhoisInaccuracyComplaintFormURL = "https://www.icann.org/wicf/";
-    if (!info.domainName) {
-        info.statusMessage = '可注册';
+    if (!info.domainName && !info.statusMessage) {
+        info.statusMessage = '无法识别域名状态';
+        info.domainStatus = ['无法识别域名状态'];
     }
     return info;
 }
