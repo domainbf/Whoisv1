@@ -51,7 +51,7 @@ interface WhoisInformation {
     statusMessage?: string;
 }
 
-// 状态码映射表（全部小写无空格防止匹配不到）
+// 状态码映射表
 const statusCodeMap: { [key: string]: string } = {
     'ok': '正常',
     'clientdeleteprohibited': '客户端禁止删除',
@@ -66,19 +66,23 @@ const statusCodeMap: { [key: string]: string } = {
     'serverupdateprohibited': '服务器禁止更新'
 };
 
-// 状态字符串解析（兼容带URL及多状态）
+// 状态字符串解析（兼容带URL及多行）
 function parseStatusLine(line: string): string[] {
-    // 按逗号/空格分割，允许每个状态后跟URL
-    return line
-        .split(/[,;]+/)
-        .map(item => {
-            // 提取状态码部分
-            const match = item.match(/([a-zA-Z]+(?:DeleteProhibited|Hold|RenewProhibited|TransferProhibited|UpdateProhibited|OK|ok))/);
-            let code = match ? match[1].toLowerCase() : item.trim().toLowerCase();
-            code = code.replace(/\s+/g, ''); // 移除空格防止匹配不到
-            return statusCodeMap[code] || item.trim();
-        })
-        .filter(Boolean);
+    // 先去除所有URL和多余空格，分割每一行
+    return (
+        line
+            .split(/[\n,]+/)
+            .map(item => {
+                // 提取状态码部分
+                const match = item.match(/([a-zA-Z]+(?:DeleteProhibited|Hold|RenewProhibited|TransferProhibited|UpdateProhibited|OK|ok))/);
+                let code = match ? match[1].toLowerCase().replace(/\s+/g, '') : '';
+                // 若找不到状态码，尝试整行
+                if (!code && item.trim()) code = item.trim().toLowerCase().replace(/\s+/g, '');
+                return statusCodeMap[code] || item.trim();
+            })
+            // 去除URL和空内容
+            .filter(s => !!s && !s.startsWith('http'))
+    );
 }
 
 // 日期安全转换，若非法则返回原字符串（避免页面Invalid time value）
