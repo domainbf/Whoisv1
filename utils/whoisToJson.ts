@@ -51,27 +51,42 @@ interface WhoisInformation {
     statusMessage?: string;
 }
 
+// 状态码映射表（全部小写无空格防止匹配不到）
 const statusCodeMap: { [key: string]: string } = {
     'ok': '正常',
-    'client delete prohibited': '客户端禁止删除',
-    'client hold': '客户端暂停',
-    'client renew prohibited': '客户端禁止续订',
-    'client transfer prohibited': '客户端禁止转移',
-    'client update prohibited': '客户端禁止更新',
-    'server delete prohibited': '服务器禁止删除',
-    'server hold': '服务器暂停',
-    'server renew prohibited': '服务器禁止续订',
-    'server transfer prohibited': '服务器禁止转移',
-    'server update prohibited': '服务器禁止更新'
+    'clientdeleteprohibited': '客户端禁止删除',
+    'clienthold': '客户端暂停',
+    'clientrenewprohibited': '客户端禁止续订',
+    'clienttransferprohibited': '客户端禁止转移',
+    'clientupdateprohibited': '客户端禁止更新',
+    'serverdeleteprohibited': '服务器禁止删除',
+    'serverhold': '服务器暂停',
+    'serverrenewprohibited': '服务器禁止续订',
+    'servertransferprohibited': '服务器禁止转移',
+    'serverupdateprohibited': '服务器禁止更新'
 };
 
+// 状态字符串解析（兼容带URL及多状态）
+function parseStatusLine(line: string): string[] {
+    // 按逗号/空格分割，允许每个状态后跟URL
+    return line
+        .split(/[,;]+/)
+        .map(item => {
+            // 提取状态码部分
+            const match = item.match(/([a-zA-Z]+(?:DeleteProhibited|Hold|RenewProhibited|TransferProhibited|UpdateProhibited|OK|ok))/);
+            let code = match ? match[1].toLowerCase() : item.trim().toLowerCase();
+            code = code.replace(/\s+/g, ''); // 移除空格防止匹配不到
+            return statusCodeMap[code] || item.trim();
+        })
+        .filter(Boolean);
+}
+
+// 日期安全转换，若非法则返回原字符串（避免页面Invalid time value）
 function safeDate(s: string | undefined): string | undefined {
     if (!s) return undefined;
-    // 只要有T，认为是ISO格式，直接返回
     if (/T\d{2}:\d{2}:\d{2}/.test(s)) return s;
-    // 尝试标准化格式
     const d = new Date(s);
-    if (isNaN(d.getTime())) return s; // 保留原值以便页面能显示原字符串
+    if (isNaN(d.getTime())) return s;
     return d.toISOString();
 }
 
@@ -79,6 +94,7 @@ export function ParseWhois(whoisText: string): WhoisInformation {
     const lines = whoisText.split('\n');
     const info: WhoisInformation = {};
 
+    // 未注册/保留域名判断
     const notRegisteredPhrases = [
         'No Object Found',
         'The queried object does not exist',
@@ -99,19 +115,20 @@ export function ParseWhois(whoisText: string): WhoisInformation {
         return info;
     }
 
+    // 法语账单块
     let billingSection = false;
     let billing: any = {};
 
     lines.forEach(line => {
-        // 法语段匹配
+        // 法语主字段
         if (/^Nom de domaine\s*:/i.test(line)) info.domainName = line.split(':').slice(1).join(':').trim();
         if (/^Date de création\s*:/i.test(line)) info.creationDate = safeDate(line.split(':').slice(1).join(':').trim());
         if (/^Dernière modification\s*:/i.test(line)) info.updatedDate = safeDate(line.split(':').slice(1).join(':').trim());
         if (/^Date d'expiration\s*:/i.test(line)) info.registryExpiryDate = safeDate(line.split(':').slice(1).join(':').trim());
         if (/^Registrar\s*:/i.test(line)) info.registrar = line.split(':').slice(1).join(':').trim();
-        if (/^Statut\s*:/i.test(line)) info.domainStatus = [line.split(':').slice(1).join(':').trim()];
+        if (/^Statut\s*:/i.test(line)) info.domainStatus = parseStatusLine(line.split(':').slice(1).join(':').trim());
 
-        // 法语账单联系人块
+        // 账单块开始
         if (/^\[BILLING_C\]/i.test(line)) billingSection = true;
         if (billingSection) {
             if (/^ID Contact\s*:/i.test(line)) billing.billingId = line.split(':').slice(1).join(':').trim();
@@ -125,9 +142,10 @@ export function ParseWhois(whoisText: string): WhoisInformation {
             if (/^Courriel\s*:/i.test(line)) billing.billingEmail = line.split(':').slice(1).join(':').trim();
         }
 
-        // 英文主字段兼容
+        // 英文字段解析
         const [key, value] = line.split(/:\s+/).map(part => part?.trim());
         if (!key || !value) return;
+
         switch (key.toLowerCase()) {
             case 'domain name':
             case 'domain':
@@ -172,10 +190,8 @@ export function ParseWhois(whoisText: string): WhoisInformation {
                 break;
             case 'domain status':
             case 'status':
-                {
-                    const status = statusCodeMap[value.toLowerCase()] || value;
-                    info.domainStatus = info.domainStatus ? [...info.domainStatus, status] : [status];
-                }
+                if (!info.domainStatus) info.domainStatus = [];
+                info.domainStatus.push(...parseStatusLine(value));
                 break;
             case 'name server':
             case 'nameserver':
