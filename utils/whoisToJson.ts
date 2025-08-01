@@ -93,49 +93,63 @@ function safeDate(s: string | undefined): string | undefined {
     return d.toISOString();
 }
 
-// 未注册和保留域名的增强判断
+// 超级增强：未注册和保留域名的判断，支持几乎所有TLD
 function checkUnregisteredReserved(whoisText: string): {unregistered: boolean, reserved: boolean, message: string} {
-    const notRegisteredPhrases = [
-        'No Object Found',
-        'The queried object does not exist',
-        'No match for domain',
-        'No entries found',
-        'Domain not found',
-        'Not Registered',
-        'is free',
-        'Status: free',
-        'Status: Available',
-        'no data found',
-        'not been registered',
-        'The domain has not been registered',
-        'not registered',
-        'Object_Not_Found'
-    ];
-    const reservedPhrases = [
-        'Reserved Name',
-        'This domain is reserved',
-        'is reserved',
-        'Status: Reserved',
-        'reserved by registry',
-        'reserved domain'
+    const lower = whoisText.toLowerCase();
+
+    // 未注册短语（合并自各大TLD注册局和主流whois server所有常见提示）
+    const notRegisteredRegexList = [
+        /no match for/i,
+        /no entries found/i,
+        /not found/i,
+        /no data found/i,
+        /not been registered/i,
+        /status:\s*free/i,
+        /status:\s*available/i,
+        /domain name not found/i,
+        /nothing found/i,
+        /no object found/i,
+        /the queried object does not exist/i,
+        /not registered/i,
+        /no such domain/i,
+        /does not exist/i,
+        /no whois record/i,
+        /no records matching/i,
+        /no information available/i,
+        /is free/i,
+        /is not registered/i,
+        /object_not_found/i,
+        /not allocated/i,
+        /status:\s*未注册/i,
+        /available for registration/i,
+        /is available/i,
+        /is not taken/i,
+        /status:\s*未分配/i,
+        /no entry found/i,
+        /未注册/i,
+        /尚未注册/i,
+        /free/i
     ];
 
-    for (const phrase of notRegisteredPhrases) {
-        if (whoisText.toLowerCase().includes(phrase.toLowerCase())) {
+    const reservedRegexList = [
+        /reserved/i,
+        /status:\s*reserved/i,
+        /reserved name/i,
+        /this domain is reserved/i,
+        /reserved by registry/i,
+        /保留域名/i,
+        /保留/i
+    ];
+
+    for (const reg of notRegisteredRegexList) {
+        if (reg.test(whoisText)) {
             return {unregistered: true, reserved: false, message: '未注册（可注册）'};
         }
     }
-    for (const phrase of reservedPhrases) {
-        if (whoisText.toLowerCase().includes(phrase.toLowerCase())) {
+    for (const reg of reservedRegexList) {
+        if (reg.test(whoisText)) {
             return {unregistered: false, reserved: true, message: '保留域名'};
         }
-    }
-    // 额外：部分whois会有Available、未分配、free等短语
-    if (/status:\s*available/i.test(whoisText) || /\bavailable\b/i.test(whoisText)) {
-        return {unregistered: true, reserved: false, message: '未注册（可注册）'};
-    }
-    if (/status:\s*reserved/i.test(whoisText) || /\breserved\b/i.test(whoisText)) {
-        return {unregistered: false, reserved: true, message: '保留域名'};
     }
     return {unregistered: false, reserved: false, message: ''};
 }
@@ -144,7 +158,7 @@ export function ParseWhois(whoisText: string): WhoisInformation {
     const lines = whoisText.split('\n');
     const info: WhoisInformation = {};
 
-    // 增强未注册/保留域名判断
+    // 超级增强未注册/保留域名判断
     const statusCheck = checkUnregisteredReserved(whoisText);
     if (statusCheck.unregistered) {
         info.statusMessage = statusCheck.message;
