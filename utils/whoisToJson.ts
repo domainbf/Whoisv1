@@ -51,7 +51,6 @@ interface WhoisInformation {
     statusMessage?: string;
 }
 
-// Dictionary to map status codes to Chinese names
 const statusCodeMap: { [key: string]: string } = {
     'ok': '正常',
     'client delete prohibited': '客户端禁止删除',
@@ -65,6 +64,16 @@ const statusCodeMap: { [key: string]: string } = {
     'server transfer prohibited': '服务器禁止转移',
     'server update prohibited': '服务器禁止更新'
 };
+
+function safeDate(s: string | undefined): string | undefined {
+    if (!s) return undefined;
+    // 只要有T，认为是ISO格式，直接返回
+    if (/T\d{2}:\d{2}:\d{2}/.test(s)) return s;
+    // 尝试标准化格式
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return s; // 保留原值以便页面能显示原字符串
+    return d.toISOString();
+}
 
 export function ParseWhois(whoisText: string): WhoisInformation {
     const lines = whoisText.split('\n');
@@ -90,41 +99,35 @@ export function ParseWhois(whoisText: string): WhoisInformation {
         return info;
     }
 
-    // 用法语和英文字段都尝试提取，兼容.sn等法语whois
     let billingSection = false;
     let billing: any = {};
-    let tld = ""; // 用于后续扩展.tn等特殊处理
 
     lines.forEach(line => {
-        const [key, value] = line.split(/:\s+/).map(part => part.trim());
-        if (!key || !value) {
-            // 检查是否进入账单块
-            if (/^\[BILLING_C\]/i.test(line)) billingSection = true;
-            continue;
-        }
+        // 法语段匹配
+        if (/^Nom de domaine\s*:/i.test(line)) info.domainName = line.split(':').slice(1).join(':').trim();
+        if (/^Date de création\s*:/i.test(line)) info.creationDate = safeDate(line.split(':').slice(1).join(':').trim());
+        if (/^Dernière modification\s*:/i.test(line)) info.updatedDate = safeDate(line.split(':').slice(1).join(':').trim());
+        if (/^Date d'expiration\s*:/i.test(line)) info.registryExpiryDate = safeDate(line.split(':').slice(1).join(':').trim());
+        if (/^Registrar\s*:/i.test(line)) info.registrar = line.split(':').slice(1).join(':').trim();
+        if (/^Statut\s*:/i.test(line)) info.domainStatus = [line.split(':').slice(1).join(':').trim()];
 
-        // 法语.sn主字段
-        if (/^Nom de domaine$/i.test(key)) info.domainName = value;
-        if (/^Date de création$/i.test(key)) info.creationDate = value;
-        if (/^Dernière modification$/i.test(key)) info.updatedDate = value;
-        if (/^Date d'expiration$/i.test(key)) info.registryExpiryDate = value;
-        if (/^Registrar$/i.test(key)) info.registrar = value;
-        if (/^Statut$/i.test(key)) info.domainStatus = [value];
-
-        // 法语.sn账单联系人
+        // 法语账单联系人块
+        if (/^\[BILLING_C\]/i.test(line)) billingSection = true;
         if (billingSection) {
-            if (/^ID Contact$/i.test(key)) billing.billingId = value;
-            if (/^Type$/i.test(key)) billing.billingType = value;
-            if (/^Nom$/i.test(key)) billing.billingName = value;
-            if (/^Adresse$/i.test(key)) billing.billingAddress = value;
-            if (/^Code postal$/i.test(key)) billing.billingPostalCode = value;
-            if (/^Ville$/i.test(key)) billing.billingCity = value;
-            if (/^Pays$/i.test(key)) billing.billingCountry = value;
-            if (/^Téléphone$/i.test(key)) billing.billingPhone = value;
-            if (/^Courriel$/i.test(key)) billing.billingEmail = value;
+            if (/^ID Contact\s*:/i.test(line)) billing.billingId = line.split(':').slice(1).join(':').trim();
+            if (/^Type\s*:/i.test(line)) billing.billingType = line.split(':').slice(1).join(':').trim();
+            if (/^Nom\s*:/i.test(line)) billing.billingName = line.split(':').slice(1).join(':').trim();
+            if (/^Adresse\s*:/i.test(line)) billing.billingAddress = line.split(':').slice(1).join(':').trim();
+            if (/^Code postal\s*:/i.test(line)) billing.billingPostalCode = line.split(':').slice(1).join(':').trim();
+            if (/^Ville\s*:/i.test(line)) billing.billingCity = line.split(':').slice(1).join(':').trim();
+            if (/^Pays\s*:/i.test(line)) billing.billingCountry = line.split(':').slice(1).join(':').trim();
+            if (/^Téléphone\s*:/i.test(line)) billing.billingPhone = line.split(':').slice(1).join(':').trim();
+            if (/^Courriel\s*:/i.test(line)) billing.billingEmail = line.split(':').slice(1).join(':').trim();
         }
 
-        // 英文字段（原有逻辑，兼容所有TLD）
+        // 英文主字段兼容
+        const [key, value] = line.split(/:\s+/).map(part => part?.trim());
+        if (!key || !value) return;
         switch (key.toLowerCase()) {
             case 'domain name':
             case 'domain':
@@ -147,19 +150,19 @@ export function ParseWhois(whoisText: string): WhoisInformation {
             case 'updated date':
             case 'last updated':
             case 'last modified':
-                info.updatedDate = value;
+                info.updatedDate = safeDate(value);
                 break;
             case 'creation date':
             case 'created date':
             case 'created':
             case 'registration date':
-                info.creationDate = value;
+                info.creationDate = safeDate(value);
                 break;
             case 'registry expiry date':
             case 'expiry date':
             case 'expires on':
             case 'expiration date':
-                info.registryExpiryDate = value;
+                info.registryExpiryDate = safeDate(value);
                 break;
             case 'registrar':
                 info.registrar = value;
@@ -294,7 +297,7 @@ export function ParseWhois(whoisText: string): WhoisInformation {
         }
     });
 
-    // 合并账单联系人（无论是法语还是英文）
+    // 合并法语账单联系人
     if (billing.billingName) info.billingName = billing.billingName;
     if (billing.billingAddress) info.billingAddress = billing.billingAddress;
     if (billing.billingPostalCode) info.billingPostalCode = billing.billingPostalCode;
